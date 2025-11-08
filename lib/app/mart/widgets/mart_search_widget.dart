@@ -8,7 +8,7 @@ import 'package:customer/app/mart/screens/mart_categorhy_details_screen/mart_cat
 import 'package:customer/app/mart/screens/mart_product_details_screen/mart_product_details_screen.dart';
 import 'package:customer/controllers/category_detail_controller.dart';
 import 'package:customer/themes/mart_theme.dart';
-import 'package:customer/themes/app_them_data.dart';
+import 'package:customer/utils/utils/color_const.dart';
 
 class MartSearchWidget extends StatefulWidget {
   final bool showHistory;
@@ -269,7 +269,7 @@ class _MartSearchWidgetState extends State<MartSearchWidget> {
             MartTheme.grayVeryLight,
           ],
         ),
-        borderRadius: BorderRadius.circular(MartTheme.inputRadius),
+        borderRadius: BorderRadius.circular(30),
         border: Border.all(color: MartTheme.brandGreen.withOpacity(0.3)),
         boxShadow: MartTheme.cardShadow,
       ),
@@ -285,8 +285,9 @@ class _MartSearchWidgetState extends State<MartSearchWidget> {
           prefixIcon: Container(
             margin: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              gradient: MartTheme.brandGradient,
-              borderRadius: BorderRadius.circular(MartTheme.buttonRadius),
+              color: ColorConst.martPrimary,
+              // gradient: MartTheme.brandGradient,
+              borderRadius: BorderRadius.circular(MartTheme.cardRadius),
             ),
             child: const Icon(Icons.search, color: Colors.white),
           ),
@@ -621,7 +622,7 @@ class _MartSearchWidgetState extends State<MartSearchWidget> {
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
         final horizontalPadding = 16.0;
-        final spacing = 4.0; // 🔑 Reduced spacing for tighter layout
+        final spacing = 8.0; // 🔑 Reduced spacing for tighter layout
         
         // 🔑 Calculate responsive grid columns - ensure at least 2 horizontally
         final availableWidth = screenWidth - (horizontalPadding * 2);
@@ -632,13 +633,14 @@ class _MartSearchWidgetState extends State<MartSearchWidget> {
         final itemWidth = (availableWidth - (spacing * (crossAxisCount - 1))) / crossAxisCount;
         
         return GridView.builder(
+          padding: EdgeInsets.only(top: 10),
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: spacing,
             mainAxisSpacing: spacing,
-            childAspectRatio: itemWidth / 35, // 🔑 Reduced height for smaller boxes
+            childAspectRatio: itemWidth / 45, // 🔑 Reduced height for smaller boxes
           ),
           itemCount: searches.length,
           itemBuilder: (context, index) {

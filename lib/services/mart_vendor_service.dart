@@ -73,7 +73,6 @@ class MartVendorService {
           .where('isOpen', isEqualTo: true)
           .limit(1)
           .get();
-
       if (querySnapshot.docs.isNotEmpty) {
         final doc = querySnapshot.docs.first;
         return MartVendorModel.fromJson({...doc.data(), 'id': doc.id});
@@ -109,13 +108,10 @@ class MartVendorService {
     try {
       print('🔍 [MART_VENDOR_SERVICE] Querying mart vendors for zone: $zoneId');
       print('📊 [MART_VENDOR_SERVICE] Query: vType="mart" (filtering by zone in memory, regardless of isOpen status)');
-      
-      // Get all mart vendors first (more reliable approach)
       final allMartVendors = await _firestore
           .collection(_collectionName)
           .where('vType', isEqualTo: 'mart')
           .get();
-      
       print('📊 [MART_VENDOR_SERVICE] Found ${allMartVendors.docs.length} total mart vendors in database');
       
       // Filter by zone and isOpen in memory (more reliable than Firestore query)

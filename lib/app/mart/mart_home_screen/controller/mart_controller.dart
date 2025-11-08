@@ -16,6 +16,132 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 class MartController extends GetxController {
+
+
+  //NEW SECTION
+  RxMap<String, List<MartItemModel>> categoryProductsMap = <String, List<MartItemModel>>{}.obs;
+  RxList<String> uniqueCategoryTitles = <String>[].obs;
+  Future<void> loadCategoryProductsForSections() async {
+    try {
+      print('[MART CONTROLLER] 🔄 Loading products grouped by categoryTitle...');
+
+      // Get all mart items
+      final allProducts = await _firestoreService.getMartItems(
+        search: null,
+        limit: 200, // Get more items to have enough for each category
+      );
+
+      // Group products by categoryTitle
+      final Map<String, List<MartItemModel>> categoryMap = {};
+
+      for (final product in allProducts) {
+        final categoryTitle = product.categoryTitle ?? 'Uncategorized';
+
+        if (!categoryMap.containsKey(categoryTitle)) {
+          categoryMap[categoryTitle] = [];
+        }
+
+        // Add product to the category list (limit to 10 products per category for horizontal scroll)
+        if (categoryMap[categoryTitle]!.length < 10) {
+          categoryMap[categoryTitle]!.add(product);
+        }
+      }
+
+      // Update reactive variables
+      categoryProductsMap.clear();
+      categoryProductsMap.addAll(categoryMap);
+
+      uniqueCategoryTitles.clear();
+      uniqueCategoryTitles.addAll(categoryMap.keys.toList());
+
+      // 🐾 Move "Pet Care" to the top if it exists
+      if (uniqueCategoryTitles.contains('Pet Care')) {
+        uniqueCategoryTitles.remove('Pet Care');
+        uniqueCategoryTitles.insert(7, 'Pet Care');
+      }
+      if (uniqueCategoryTitles.contains('Fruits & Vegetables')) {
+        uniqueCategoryTitles.remove('Fruits & Vegetables');
+        uniqueCategoryTitles.insert(0, 'Fruits & Vegetables');
+      }
+      if (uniqueCategoryTitles.contains('Cooking Essentials')) {
+        uniqueCategoryTitles.remove('Cooking Essentials');
+        uniqueCategoryTitles.insert(1, 'Cooking Essentials');
+      }
+      print('[MART CONTROLLER] ✅ Loaded ${uniqueCategoryTitles.length} unique categories:');
+      for (final category in uniqueCategoryTitles) {
+        print('  - $category: ${categoryProductsMap[category]?.length ?? 0} products');
+      }
+
+      update();
+    } catch (e) {
+      print('[MART CONTROLLER] ❌ Error loading products by category: $e');
+    }
+  }
+
+  /// Load products grouped by categoryTitle for dynamic sections
+//   Future<void> loadCategoryProductsForSections() async {
+//     try {
+//       print('[MART CONTROLLER] 🔄 Loading products grouped by categoryTitle...');
+//
+//       // Get all mart items
+//       final allProducts = await _firestoreService.getMartItems(
+//         search: null,
+//         limit: 200, // Get more items to have enough for each category
+//       );
+//
+//       // Group products by categoryTitle
+//       final Map<String, List<MartItemModel>> categoryMap = {};
+//
+//       for (final product in allProducts) {
+//         final categoryTitle = product.categoryTitle ?? 'Uncategorized';
+//
+//         if (!categoryMap.containsKey(categoryTitle)) {
+//           categoryMap[categoryTitle] = [];
+//         }
+//
+//         // Add product to the category list (limit to 10 products per category for horizontal scroll)
+//         if (categoryMap[categoryTitle]!.length < 10) {
+//           categoryMap[categoryTitle]!.add(product);
+//         }
+//       }
+//
+//       // Update reactive variables
+//       categoryProductsMap.clear();
+//       categoryProductsMap.addAll(categoryMap);
+//
+//       uniqueCategoryTitles.clear();
+//       uniqueCategoryTitles.addAll(categoryMap.keys.toList());
+//
+//       print('[MART CONTROLLER] ✅ Loaded ${uniqueCategoryTitles.length} unique categories:');
+//       uniqueCategoryTitles.forEach((category) {
+//         print('  - $category: ${categoryProductsMap[category]?.length ?? 0} products');
+//       });
+// update();
+//     } catch (e) {
+//       print('[MART CONTROLLER] ❌ Error loading products by category: $e');
+//     }
+//   }
+
+  /// Get products for a specific category title
+  List<MartItemModel> getProductsForCategoryTitle(String categoryTitle) {
+    return categoryProductsMap[categoryTitle] ?? [];
+  }
+
+  /// Get products for a specific category
+  List<MartItemModel> getProductsForCategory(String categoryId) {
+    // Filter martItems by category ID
+    final categoryProducts = martItems.where((item) => item.categoryID == categoryId).toList();
+
+    // If no products found in current martItems, try to load them
+    if (categoryProducts.isEmpty) {
+      // Trigger loading for this category
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        loadCategoryItems(categoryId);
+      });
+    }
+
+    return categoryProducts;
+  }
   // Service injection
   final MartFirestoreService _firestoreService =
       Get.find<MartFirestoreService>();
@@ -113,19 +239,8 @@ class MartController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    print('[MART CONTROLLER] ==========================================');
-    print('[MART CONTROLLER] 🚀 onInit() called');
-    print('[MART CONTROLLER] 📊 Initial state:');
-    print(
-        '[MART CONTROLLER]   - featuredCategories: ${featuredCategories.length}');
-    print(
-        '[MART CONTROLLER]   - isCategoryLoading: ${isCategoryLoading.value}');
-    print('[MART CONTROLLER]   - errorMessage: ${errorMessage.value}');
-    print('[MART CONTROLLER] ==========================================');
-
-    // Start sections loading immediately when controller is created
+    loadCategoryProductsForSections();
     _preloadSections();
-
     _initializeServices();
     setupSearchListener();
   }
@@ -142,26 +257,19 @@ class MartController extends GetxController {
         martBottomBannerController.value.dispose();
       }
     } catch (e) {
-      // Ignore disposal errors
     }
     super.onClose();
   }
-
-  // ==================== BANNER FUNCTIONALITY ====================
-
   /// Start mart banner auto-scroll timer
   void startMartBannerTimer() {
     _martBannerTimer?.cancel();
     _martBannerTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      // Check if controller is still valid and widget is mounted
       if (!Get.isRegistered<MartController>() ||
           !martTopBannerController.value.hasClients) {
         timer.cancel();
         return;
       }
-
       if (martTopBanners.isNotEmpty) {
-        // For infinite scrolling, we need to get the current page and move to next
         try {
           if (martTopBannerController.value.hasClients) {
             int currentPage = martTopBannerController.value.page?.round() ?? 0;
@@ -531,8 +639,8 @@ class MartController extends GetxController {
       errorMessage.value = "";
 
       // Get user's current location or use default coordinates
-      double? userLatitude;
-      double? userLongitude;
+      double? userLatitude =0.0;
+      double? userLongitude= 0.0;
 
       // Try to get location from user model or preferences
       if (Constant.userModel?.shippingAddress != null &&
@@ -2053,7 +2161,6 @@ class MartController extends GetxController {
       // Try Firestore first (fastest path)
       try {
         final categories = await _firestoreService.getCategories(limit: 100);
-
         if (categories.isNotEmpty) {
           // Stream the data as it becomes available
           martCategories.clear();

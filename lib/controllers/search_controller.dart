@@ -5,7 +5,6 @@ import 'package:customer/utils/fire_store_utils.dart';
 import 'package:customer/utils/text_processing_anr_fix.dart';
 import 'package:get/get.dart';
 import 'dart:async';
-import 'dart:isolate';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';

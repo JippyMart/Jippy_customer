@@ -55,7 +55,7 @@ class ViewAllCategoryScreen extends StatelessWidget {
                         crossAxisCount: 3,
                         mainAxisSpacing: 16,
                         crossAxisSpacing: 16,
-                        childAspectRatio: 0.9,
+                        childAspectRatio: 0.8,
                       ),
                       itemCount: controller.vendorCategoryModel.length,
                       itemBuilder: (context, index) {
@@ -83,7 +83,7 @@ class ViewAllCategoryScreen extends StatelessWidget {
       BuildContext context,
       ) {
     return Card(
-      elevation: 2,
+      elevation: 0,
       shadowColor: isDark ? Colors.black54 : Colors.grey.withOpacity(0.3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),

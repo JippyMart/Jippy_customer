@@ -56,7 +56,7 @@ class MartItemModel {
   final bool? has_options;
   final int? options_count;
   final List<Map<String, dynamic>>? options;
-
+final String? categoryTitle;
   MartItemModel({
     required this.id,
     required this.name,
@@ -113,6 +113,7 @@ class MartItemModel {
     this.has_options,
     this.options_count,
     this.options,
+    this.categoryTitle,
   });
 
   factory MartItemModel.fromJson(Map<String, dynamic> json) {
@@ -143,6 +144,7 @@ class MartItemModel {
         quantity: json['quantity'] ?? 0,
         vendorID: json['vendorID']?.toString(),
         categoryID: json['categoryID']?.toString(),
+          categoryTitle: json['categoryTitle']?.toString(),
         calories: (json['calories'] as num?)?.toDouble(),
         grams: (json['grams'] as num?)?.toDouble(),
         proteins: (json['proteins'] as num?)?.toDouble(),
@@ -250,6 +252,7 @@ class MartItemModel {
       'isStealOfMoment': isStealOfMoment,
       'has_options': has_options,
       'options_count': options_count,
+      'categoryTitle': categoryTitle,
     };
   }
 

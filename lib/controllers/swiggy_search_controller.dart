@@ -12,6 +12,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SwiggySearchController extends GetxController {
 
+
+  ////SEEAR
+
   /// **CLEAR RECENT SEARCHES**
   void clearRecentSearches() {
     try {
@@ -221,7 +224,6 @@ class SwiggySearchController extends GetxController {
   Future<void> _performFreshDataSearch(String query, List<dynamic> results) async {
     try {
       final lowerQuery = query.toLowerCase();
-
       // Try to get fresh products
       try {
         List<ProductModel> freshProducts = await FireStoreUtils.getAllProducts(limit: 200);
@@ -475,7 +477,6 @@ class SwiggySearchController extends GetxController {
 
     try {
       print("🔍 Searching for: '$query' (using enhanced multi-collection search)");
-
       // **ENHANCED: Use multi-collection search with grouped results**
       performEnhancedMultiCollectionSearch(query);
 
@@ -735,7 +736,7 @@ class SwiggySearchController extends GetxController {
       try {
         // **CRITICAL: Use memory-safe limits to prevent crashes**
         allRestaurants = await FireStoreUtils.getAllVendors(limit: MAX_VENDORS_PER_SEARCH); // Limit to 25 restaurants
-        allProducts = await FireStoreUtils.getAllProducts(limit: MAX_PRODUCTS_PER_SEARCH); // Limit to 40 products
+        allProducts = await FireStoreUtils.getAllProductsInZone(limit: MAX_PRODUCTS_PER_SEARCH); // Limit to 40 products
         allCategories = await FireStoreUtils.getVendorCategory();
         print("🔍 Loaded ${allRestaurants.length} restaurants, ${allProducts.length} products, ${allCategories.length} categories (memory safe)");
       } catch (e) {
@@ -1447,7 +1448,6 @@ class SwiggySearchController extends GetxController {
       // **PHASE 1: Primary search in main fields (title/name)**
       print("🔍 Phase 1: Primary search in main fields");
       final primaryResults = await _performPrimarySearch(lowerQuery);
-
       // **PHASE 2: Fallback search in descriptions if needed**
       if (primaryResults['totalResults'] < 10) {
         print("🔍 Phase 2: Fallback search in descriptions");
@@ -1456,10 +1456,8 @@ class SwiggySearchController extends GetxController {
       } else {
         _updateSearchResults(primaryResults);
       }
-
       // Save to recent searches
       _saveRecentSearch(query);
-
       print("📊 Enhanced search completed: ${restaurantResults.length} restaurants, ${productResults.length} products, ${categoryResults.length} categories");
 
     } catch (e) {
@@ -1559,16 +1557,28 @@ class SwiggySearchController extends GetxController {
       return [];
     }
   }
-
-  /// **OPTIMIZED PRODUCT SEARCH - Main fields**
   Future<List<ProductModel>> _searchProductsOptimized(String query, int limit) async {
     try {
       print("🔍 Optimized product search for: '$query' (limit: $limit)");
 
-      // **SINGLE QUERY: Load products with publish filter (no prefix matching)**
+      // ✅ STEP 1: Identify allowed vendor IDs based on selected zone
+      List<String> allowedVendorIds = [];
+      if (Constant.selectedZone != null) {
+        print("🌍 Filtering products for zone: ${Constant.selectedZone!.name}");
+        QuerySnapshot vendorSnapshot = await FirebaseFirestore.instance
+            .collection(CollectionName.vendors)
+            .where('zoneId', isEqualTo: Constant.selectedZone!.id.toString())
+            .get();
+
+        allowedVendorIds =
+            vendorSnapshot.docs.map((e) => e.id.toString()).toList();
+        print("✅ Found ${allowedVendorIds.length} vendors in this zone");
+      }
+
+      // ✅ STEP 2: Query published products only
       Query firestoreQuery = FirebaseFirestore.instance
           .collection(CollectionName.vendorProducts)
-          .where('publish', isEqualTo: true)
+          // .where('publish', isEqualTo: true)
           .limit(limit);
 
       QuerySnapshot querySnapshot = await firestoreQuery.get();
@@ -1579,7 +1589,14 @@ class SwiggySearchController extends GetxController {
           final data = document.data() as Map<String, dynamic>;
           final product = ProductModel.fromJson(data);
 
-          // **SMART MATCHING: Check name first, then description**
+          // ✅ STEP 3: Apply zone-based filter
+          if (Constant.selectedZone != null) {
+            if (!allowedVendorIds.contains(product.vendorID)) {
+              continue; // Skip products outside the selected zone
+            }
+          }
+
+          // ✅ STEP 4: Smart search filtering
           if (_productMatchesPrimaryQuery(product, query)) {
             results.add(product);
           }
@@ -1588,13 +1605,49 @@ class SwiggySearchController extends GetxController {
         }
       }
 
-      print("✅ Found ${results.length} products via optimized search");
+      print("✅ Found ${results.length} zone-filtered products via optimized search");
       return results;
     } catch (e) {
       print("❌ Optimized product search failed: $e");
       return [];
     }
   }
+
+  /// **OPTIMIZED PRODUCT SEARCH - Main fields**
+  // Future<List<ProductModel>> _searchProductsOptimized(String query, int limit) async {
+  //   try {
+  //     print("🔍 Optimized product search for: '$query' (limit: $limit)");
+  //
+  //     // **SINGLE QUERY: Load products with publish filter (no prefix matching)**
+  //     Query firestoreQuery = FirebaseFirestore.instance
+  //         .collection(CollectionName.vendorProducts)
+  //         .where('publish', isEqualTo: true)
+  //         .limit(limit);
+  //
+  //     QuerySnapshot querySnapshot = await firestoreQuery.get();
+  //
+  //     List<ProductModel> results = [];
+  //     for (var document in querySnapshot.docs) {
+  //       try {
+  //         final data = document.data() as Map<String, dynamic>;
+  //         final product = ProductModel.fromJson(data);
+  //
+  //         // **SMART MATCHING: Check name first, then description**
+  //         if (_productMatchesPrimaryQuery(product, query)) {
+  //           results.add(product);
+  //         }
+  //       } catch (e) {
+  //         print('❌ Error parsing product ${document.id}: $e');
+  //       }
+  //     }
+  //
+  //     print("✅ Found ${results.length} products via optimized search");
+  //     return results;
+  //   } catch (e) {
+  //     print("❌ Optimized product search failed: $e");
+  //     return [];
+  //   }
+  // }
 
   /// **OPTIMIZED CATEGORY SEARCH - Main fields**
   Future<List<VendorCategoryModel>> _searchCategoriesOptimized(String query, int limit) async {

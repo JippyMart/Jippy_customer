@@ -6,6 +6,26 @@ import 'package:customer/utils/fire_store_utils.dart';
 import 'package:geolocator/geolocator.dart';
 
 class MartZoneUtils {
+  static List<MartVendorModel>? _cachedMartVendors;
+  static DateTime? _lastFetchTime;
+
+  static Future<List<MartVendorModel>> getCachedMartVendors() async {
+    // If cached within last 3 minutes, return cache
+    if (_cachedMartVendors != null &&
+        _lastFetchTime != null &&
+        DateTime.now().difference(_lastFetchTime!).inMinutes < 3) {
+      return _cachedMartVendors!;
+    }
+
+    final zoneId = Constant.selectedZone?.id;
+    if (zoneId == null) return [];
+
+    final vendors = await MartVendorService.getMartVendorsByZone(zoneId);
+
+    _cachedMartVendors = vendors;
+    _lastFetchTime = DateTime.now();
+    return vendors;
+  }
   /// Check if mart is available in the current zone
   /// Returns true if there's at least one mart vendor in the current zone
   static Future<bool> isMartAvailableInCurrentZone() async {
@@ -96,25 +116,18 @@ class MartZoneUtils {
     try {
       print('\n🔍 [MART_ZONE_UTILS] ===== MART TEMPORARILY CLOSED CHECK STARTED =====');
       print('📍 [MART_ZONE_UTILS] Current Zone ID: ${Constant.selectedZone?.id ?? "NULL"}');
-      
-      // Check if we have a selected zone
+
       if (Constant.selectedZone?.id == null) {
         print('❌ [MART_ZONE_UTILS] No zone selected - Cannot check mart status');
         return false;
       }
-      
-      // Get mart vendors for the current zone
       final martVendors = await MartVendorService.getMartVendorsByZone(Constant.selectedZone!.id!);
-      
-      // If no mart vendors, not temporarily closed (just not available)
       if (martVendors.isEmpty) {
         print('📊 [MART_ZONE_UTILS] No mart vendors in zone - Not temporarily closed');
         return false;
       }
-      
-      // Check if all mart vendors are closed
+
       final allClosed = martVendors.every((vendor) => vendor.isOpen == false);
-      
       print('📊 [MART_ZONE_UTILS] Mart vendors in zone: ${martVendors.length}');
       print('📊 [MART_ZONE_UTILS] All vendors closed: $allClosed');
       

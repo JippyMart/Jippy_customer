@@ -741,7 +741,6 @@ class _SwiggySearchScreenState extends State<SwiggySearchScreen> {
       children: controller.recentSearches.asMap().entries.map((entry) {
         int index = entry.key;
         String search = entry.value;
-
         return TweenAnimationBuilder<double>(
           duration: Duration(milliseconds: 300 + (index * 100)),
           tween: Tween(begin: 0.0, end: 1.0),
@@ -805,7 +804,6 @@ class _SwiggySearchScreenState extends State<SwiggySearchScreen> {
     Color primaryColor = isRecent ? AppThemeData.primary300 : AppThemeData.warning300;
     Color backgroundColor = isRecent ? AppThemeData.primary50 : AppThemeData.warning50;
     Color borderColor = isRecent ? AppThemeData.primary200 : AppThemeData.warning200;
-
     return GestureDetector(
       onTap: () {
         searchController.text = search;
@@ -1417,16 +1415,33 @@ class _SwiggySearchScreenState extends State<SwiggySearchScreen> {
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-              "₹${product.price ?? '0'}",
-              style: TextStyle(
-                fontFamily: AppThemeData.semiBold,
-                color: AppThemeData.primary300,
-                fontSize: 16,
+            if (product.disPrice != null && product.disPrice!.isNotEmpty && product.disPrice != "0")
+              Text(
+                "₹${product.disPrice}",
+                style: TextStyle(
+                  fontFamily: AppThemeData.semiBold,
+                  color: AppThemeData.primary300,
+                  fontSize: 16,
+                ),
+              )
+            else
+              Text(
+                "₹${product.price ?? '0'}",
+                style: TextStyle(
+                  fontFamily: AppThemeData.semiBold,
+                  color: AppThemeData.primary300,
+                  fontSize: 16,
+                ),
               ),
-            ),
+            // Text(
+            //   "₹${product.disPrice ?? '0'}",
+            //   style: TextStyle(
+            //     fontFamily: AppThemeData.semiBold,
+            //     color: AppThemeData.primary300,
+            //     fontSize: 16,
+            //   ),
+            // ),
             Icon(
               Icons.arrow_forward_ios,
               color: AppThemeData.grey400,

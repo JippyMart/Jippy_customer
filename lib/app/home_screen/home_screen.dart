@@ -18,7 +18,6 @@ import 'package:customer/constant/constant.dart';
 import 'package:customer/widgets/app_loading_widget.dart';
 import 'package:customer/constant/show_toast_dialog.dart';
 import 'package:customer/widgets/coming_soon_dialog.dart';
-import 'package:customer/app/dash_board_screens/controller/dash_board_controller.dart';
 import 'package:customer/controllers/home_controller.dart';
 import 'package:customer/controllers/map_view_controller.dart';
 import 'package:customer/models/BannerModel.dart';
@@ -31,7 +30,6 @@ import 'package:customer/models/user_model.dart';
 import 'package:customer/models/vendor_category_model.dart';
 import 'package:customer/models/vendor_model.dart';
 import 'package:customer/services/database_helper.dart';
-import 'package:customer/services/location_service.dart';
 import 'package:customer/themes/app_them_data.dart';
 import 'package:customer/themes/custom_dialog_box.dart';
 import 'package:customer/themes/responsive.dart';
@@ -78,10 +76,7 @@ class HomeScreen extends StatelessWidget {
           '📍 [HOME_SCREEN] Current Zone: ${Constant.selectedZone?.id ?? "NULL"} (${Constant.selectedZone?.name ?? "NULL"})');
       print(
           '📍 [HOME_SCREEN] User Location: ${Constant.selectedLocation.location?.latitude ?? "NULL"}, ${Constant.selectedLocation.location?.longitude ?? "NULL"}');
-
-      // First check if there are any mart vendors in the zone (regardless of open/closed status)
       final martVendors = await MartZoneUtils.getMartVendorsForCurrentZone();
-
       if (martVendors.isEmpty) {
         print(
             '❌ [HOME_SCREEN] No mart vendors in zone - Showing COMING SOON dialog');

@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:country_code_picker/country_code_picker.dart';
+import 'package:customer/services/global_deeplink_handler.dart';
 import 'package:customer/config/smartlook_config.dart';
 import 'package:customer/constant/constant.dart';
 // import 'package:firebase_app_check/firebase_app_check.dart';  // TEMPORARILY DISABLED
@@ -42,79 +43,43 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_smartlook/flutter_smartlook.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:customer/services/global_deeplink_handler.dart';
 import 'package:provider/provider.dart';
 
-import 'app/category_service/category__service_screen.dart'
-    show CateringServiceScreen;
 import 'app/category_service/controller/cetegory_service_controller.dart';
 import 'app/video_splash_screen.dart';
-
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // For SystemNavigator.pop()
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // 🔗 CRITICAL: Initialize GlobalDeeplinkHandler FIRST - before any other services
-  print(
-    '🔗 [MAIN] Initializing GlobalDeeplinkHandler FIRST...',
-  );
   GlobalDeeplinkHandler.init();
-  // Register GlobalDeeplinkHandler as a permanent GetX dependency
   Get.put(
     GlobalDeeplinkHandler.instance,
     permanent: true,
   );
-  print(
-      '🔗 [MAIN] GlobalDeeplinkHandler initialized and registered successfully');
-
-  // 🛡️ CRASH PREVENTION: Initialize crash prevention system
-  print(
-    '🛡️ [MAIN] Initializing crash prevention system...',
-  );
   CrashPrevention();
-  print(
-    '🛡️ [MAIN] Crash prevention system initialized',
-  );
-  // 🚨 ANR PREVENTION:  Initialize ANR prevention systems
-  print(
-    '🚨 [MAIN] Initializing ANR prevention systems...',
-  );
   await SmartlookANRFix.configureSmartlook();
   await PlatformANRPrevention.preventMIUIANR();
   await PlatformANRPrevention.preventCiscoANR();
-  print(
-    '🚨 [MAIN] ANR prevention systems initialized',
-  );
-
-  log('🔗 [MAIN] 🚀 MAIN FUNCTION CALLED!');
-
-  // **OPTIMIZED: Initialize only critical services synchronously**
   try {
     // Initialize Firebase with timeout
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
-    ).timeout(const Duration(seconds: 3));
+    ).timeout(const Duration(seconds: 3,),);
 
-    // Configure Firestore settings
     FirebaseFirestore.instance.settings = const Settings(
       persistenceEnabled: true,
       cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
       sslEnabled: true,
     );
 
-    log('Firebase initialized successfully');
-
-    // 📊 MONITORING: Start monitoring systems AFTER Firebase is initialized
-    print('📊 [MAIN] Starting monitoring systems...');
     ANRMonitor.startMonitoring();
     MemoryMonitor.startMemoryMonitoring();
     NativeLockPrevention.startLockContentionMonitoring();
     TextProcessingANRFix.startTextProcessingMonitoring();
     ANRStatusLogger.logANRPreventionStatus();
-    print('📊 [MAIN] Monitoring systems started');
   } catch (e) {
-    log('ERROR: Failed to initialize Firebase: $e');
-    // Continue with app initialization even if Firebase fails
-    print(
-        '⚠️ [MAIN] Firebase initialization failed, continuing without monitoring systems');
   }
 
   // **OPTIMIZED: Initialize GetStorage first (fastest)**
@@ -125,9 +90,6 @@ void main() async {
 
   // **OPTIMIZED: Initialize DatabaseHelper (lightweight)**
   DatabaseHelper.instance;
-
-  log('App Check: TEMPORARILY DISABLED to eliminate SafetyNet dependencies');
-
   // **OPTIMIZED: Register critical services and controllers immediately**
   Get.put(MartFirestoreService(), permanent: true);
   Get.put(OtpController(), permanent: true);
@@ -143,7 +105,6 @@ void main() async {
   await cartProvider.checkCartPersistence();
 
   // **OPTIMIZED: Start app immediately, defer heavy services**
-  log('App startup: Starting app with deferred heavy services...');
 
   // **DEFERRED: Initialize heavy services in background**
   _initializeHeavyServicesInBackground();
@@ -166,22 +127,20 @@ void _initializeHeavyServicesInBackground() {
       // Initialize heavy services with timeouts
       await Future.wait([
         Get.putAsync(
-          () => ApiService().init(),
+              () => ApiService().init(),
         ).timeout(
           const Duration(
             seconds: 5,
           ),
         ),
         Get.putAsync(
-          () => MartFirestoreService().init(),
+              () => MartFirestoreService().init(),
         ).timeout(const Duration(seconds: 5)),
         CacheManager.initialize().timeout(const Duration(seconds: 3)),
         PerformanceOptimizer.initialize().timeout(const Duration(seconds: 2)),
         ProductionLogger.initialize().timeout(const Duration(seconds: 2)),
         AppLifecycleLogger.initialize().timeout(const Duration(seconds: 2)),
       ]);
-
-      // Initialize deep link services in background
       await Future.wait([
         PendingDeepLinkHandler.checkPendingDeepLinks()
             .timeout(const Duration(seconds: 3)),
@@ -189,10 +148,7 @@ void _initializeHeavyServicesInBackground() {
             .initialize()
             .timeout(const Duration(seconds: 3)),
       ]);
-
-      log('Background services initialized successfully');
     } catch (e) {
-      log('Background services initialization failed: $e');
     }
   });
 }
@@ -201,17 +157,10 @@ void _initializeHeavyServicesInBackground() {
 void _initializeDeepLinkServicesInBackground() {
   Future.microtask(() async {
     try {
-      print('🔗 [MAIN] 🚨 Background: Initializing FinalDeepLinkService...');
       await FinalDeepLinkService()
           .init(GlobalDeeplinkHandler.navigatorKey)
           .timeout(const Duration(seconds: 5));
-      print(
-          '🔗 [MAIN] ✅ Background: Final Deep Link Service initialized successfully');
-      log('🔗 [MAIN] Background: Final Deep Link Service initialized successfully');
     } catch (e) {
-      print(
-          '🔗 [MAIN] ❌ Background: Deep Link Service initialization failed: $e');
-      log('🔗 [MAIN] Background: Deep Link Service initialization failed: $e');
     }
   });
 }
@@ -220,16 +169,13 @@ void _initializeDeepLinkServicesInBackground() {
 void _initializeSmartLookInBackground() {
   Future.microtask(() async {
     final smartlookService = SmartlookService();
-
     try {
-      // ✅ CRITICAL: Prevent SessionRecordingStorage crashes first
       await smartlookService.preventSessionRecordingStorageCrash();
-
       await smartlookService
           .initialize(
-            SmartlookConfig.projectKey,
-            region: SmartlookConfig.region,
-          )
+        SmartlookConfig.projectKey,
+        region: SmartlookConfig.region,
+      )
           .timeout(const Duration(seconds: 3));
 
       if (smartlookService.isInitialized) {
@@ -237,25 +183,46 @@ void _initializeSmartLookInBackground() {
           smartlookService.setSensitiveDataMasking(true);
         }
         smartlookService.setRecordingQuality(SmartlookConfig.recordingQuality);
-        print(
-            '[SMARTLOOK] ✅ Initialized successfully in background with crash prevention');
       }
     } catch (e) {
-      print('[SMARTLOOK] ❌ Background initialization failed: $e');
-      // ✅ NEW: Try recovery with crash prevention
       try {
-        print('[SMARTLOOK] 🔧 Attempting recovery with crash prevention...');
         await smartlookService.preventSessionRecordingStorageCrash();
         await smartlookService.forceReinitialize(SmartlookConfig.projectKey,
             region: SmartlookConfig.region);
         if (smartlookService.isInitialized) {
-          print('[SMARTLOOK] ✅ Recovery successful with crash prevention');
         }
       } catch (e2) {
-        print('[SMARTLOOK] ❌ Recovery also failed: $e2');
       }
     }
   });
+}
+Future<bool> onWillPop(BuildContext context) async {
+  bool? shouldExit = await showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Exit App'),
+      content: const Text('Are you sure you want to exit the app?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('No'),
+        ),
+        TextButton(
+          onPressed: () {
+            if (Platform.isAndroid) {
+              SystemNavigator.pop(); // Close app properly on Android
+            } else if (Platform.isIOS) {
+              exit(0); // Force close on iOS (not recommended by Apple, but works)
+            } else {
+              SystemNavigator.pop();
+            }
+          },
+          child: const Text('Yes'),
+        ),
+      ],
+    ),
+  );
+  return shouldExit ?? false;
 }
 
 class MyApp extends StatefulWidget {
@@ -282,7 +249,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         LocalizationService().changeLocale(languageModel.slug.toString());
       } else {
         LanguageModel languageModel =
-            LanguageModel(slug: "en", isRtl: false, title: "English");
+        LanguageModel(slug: "en", isRtl: false, title: "English");
         Preferences.setString(
             Preferences.languageCodeKey, jsonEncode(languageModel.toJson()));
       }
@@ -297,7 +264,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   void getCurrentAppTheme() async {
     themeChangeProvider.darkTheme =
-        await themeChangeProvider.darkThemePreference.getTheme();
+    await themeChangeProvider.darkThemePreference.getTheme();
   }
 
   @override
@@ -308,52 +275,48 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           ChangeNotifierProvider(create: (_) => themeChangeProvider),
           ChangeNotifierProvider(create: (_) => CartProvider()),
         ],
-      // ChangeNotifierProvider(
-      // create: (_) {
-      //   return themeChangeProvider;
-      // },
-      child: Consumer<DarkThemeProvider>(
-        builder: (context, value, child) {
-          // ✅ ENHANCED: Conditional Smartlook wrapping with error handling
-          Widget appWidget = GetMaterialApp(
-            navigatorKey: GlobalDeeplinkHandler.navigatorKey,
-            title: 'JippyMart Customer'.tr,
-            debugShowCheckedModeBanner: false,
-            theme: Styles.themeData(
-                themeChangeProvider.darkTheme == 0
-                    ? true
-                    : themeChangeProvider.darkTheme == 1
-                        ? false
-                        : false,
-                context),
-            localizationsDelegates: const [
-              CountryLocalizations.delegate,
-            ],
-            locale: LocalizationService.locale,
-            fallbackLocale: LocalizationService.locale,
-            translations: LocalizationService(),
-            builder: EasyLoading.init(),
-            home: GetBuilder<GlobalSettingController>(
-              init: GlobalSettingController(),
-              builder: (context) {
-                // return CateringServiceScreen();
-                return const VideoSplashScreen();
-              },
-            ),
-          );
-          try {
-            return SmartlookRecordingWidget(
-              child: appWidget,
+        // ChangeNotifierProvider(
+        // create: (_) {
+        //   return themeChangeProvider;
+        // },
+        child: Consumer<DarkThemeProvider>(
+          builder: (context, value, child) {
+            // ✅ ENHANCED: Conditional Smartlook wrapping with error handling
+            Widget appWidget = GetMaterialApp(
+              navigatorKey: GlobalDeeplinkHandler.navigatorKey,
+              title: 'JippyMart Customer'.tr,
+              debugShowCheckedModeBanner: false,
+              theme: Styles.themeData(
+                  themeChangeProvider.darkTheme == 0
+                      ? true
+                      : themeChangeProvider.darkTheme == 1
+                      ? false
+                      : false,
+                  context),
+              localizationsDelegates: const [
+                CountryLocalizations.delegate,
+              ],
+              locale: LocalizationService.locale,
+              fallbackLocale: LocalizationService.locale,
+              translations: LocalizationService(),
+              builder: EasyLoading.init(),
+              home: GetBuilder<GlobalSettingController>(
+                init: GlobalSettingController(),
+                builder: (context) {
+                  // return CateringServiceScreen();
+                  return const VideoSplashScreen();
+                },
+              ),
             );
-          } catch (e) {
-            print(
-              '[SMARTLOOK] Error wrapping with SmartlookRecordingWidget: $e',
-            );
-            // Return app without Smartlook wrapping if there's an error
-            return appWidget;
-          }
-        },
-      ),
-    );
+            try {
+              return SmartlookRecordingWidget(
+                child: appWidget,
+              );
+            } catch (e) {
+              return appWidget;
+            }
+          },
+        ),
+      );
   }
 }

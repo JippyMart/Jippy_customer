@@ -32,7 +32,7 @@ import 'package:customer/utils/mart_zone_utils.dart';
 import 'package:customer/utils/network_image_widget.dart';
 import 'package:customer/utils/restaurant_sorting_utils.dart';
 import 'package:customer/utils/restaurant_status_utils.dart';
-import 'package:customer/utils/utils/color_const.dart';
+import 'package:customer/utils/utils/image_const.dart';
 import 'package:customer/widget/animated_search_hint.dart';
 import 'package:customer/widget/filter_bar.dart';
 import 'package:customer/widget/gradiant_text.dart';
@@ -58,69 +58,85 @@ import 'discount_restaurant_list_screen.dart';
 
 class HomeScreenTwo extends StatelessWidget {
   const HomeScreenTwo({super.key});
-
-  // Check if mart is available in current zone
   static Future<void> _checkMartAvailability() async {
     try {
-      print('\n🚀 [HOME_SCREEN_TWO] ===== MART NAVIGATION ATTEMPTED =====');
-      print('📍 [HOME_SCREEN_TWO] User tapped JippyMart button');
-      print(
-          '📍 [HOME_SCREEN_TWO] Current Zone: ${Constant.selectedZone?.id ?? "NULL"} (${Constant.selectedZone?.name ?? "NULL"})');
-      print(
-          '📍 [HOME_SCREEN_TWO] User Location: ${Constant.selectedLocation.location?.latitude ?? "NULL"}, ${Constant.selectedLocation.location?.longitude ?? "NULL"}');
-
-      // First check if there are any mart vendors in the zone (regardless of open/closed status)
-      final martVendors = await MartZoneUtils.getMartVendorsForCurrentZone();
-
-      if (martVendors.isEmpty) {
-        print(
-            '❌ [HOME_SCREEN_TWO] No mart vendors in zone - Showing COMING SOON dialog');
-        // Show coming soon dialog for zones without mart
+      // 1️⃣ Early exit if zone not set
+      if (Constant.selectedZone?.id == null) {
         ComingSoonDialogHelper.show(
           title: "COMING SOON".tr,
-          message:
-              "We're working hard to bring Jippy Mart to your area. Stay tuned for updates!",
+          message: "We're working hard to bring Jippy Mart to your area. Stay tuned!",
         );
-        print('📱 [HOME_SCREEN_TWO] COMING SOON dialog displayed to user');
-      } else {
-        // Mart vendors exist, now check if they're temporarily closed
-        final isMartTemporarilyClosed =
-            await MartZoneUtils.isMartTemporarilyClosedInCurrentZone();
-
-        if (isMartTemporarilyClosed) {
-          print(
-              '⚠️ [HOME_SCREEN_TWO] Mart is temporarily closed - Showing MART AVAILABLE dialog');
-          // Show mart available hours dialog
-          ComingSoonDialogHelper.show(
-            title: "Mart Available from 7AM to 9PM".tr,
-            message: "",
-          );
-          print('📱 [HOME_SCREEN_TWO] MART AVAILABLE dialog displayed to user');
-        } else {
-          print(
-              '✅ [HOME_SCREEN_TWO] Mart is available and open - Navigating to MartNavigationScreen');
-          print(
-              '🎯 [HOME_SCREEN_TWO] Navigation: HomeScreenTwo -> MartNavigationScreen');
-          // Navigate to mart navigation screen
-          Get.to(() => const MartNavigationScreen());
-          print('✅ [HOME_SCREEN_TWO] Navigation completed successfully');
-        }
+        return;
       }
 
-      print('🚀 [HOME_SCREEN_TWO] ===== MART NAVIGATION COMPLETED =====\n');
+      // 2️⃣ Fetch vendors ONCE
+      final martVendors = await MartZoneUtils.getCachedMartVendors();
+
+      // 3️⃣ Handle no vendors
+      if (martVendors.isEmpty) {
+        ComingSoonDialogHelper.show(
+          title: "COMING SOON".tr,
+          message: "We're working hard to bring Jippy Mart to your area. Stay tuned!",
+        );
+        return;
+      }
+
+      // 4️⃣ Check if all closed (no extra Firestore call)
+      final allClosed = martVendors.every((v) => v.isOpen == false);
+      if (allClosed) {
+        ComingSoonDialogHelper.show(
+          title: "Mart Available from 7AM to 9PM".tr,
+          message: "",
+        );
+        return;
+      }
+
+      // 5️⃣ Navigate immediately
+      Get.to(() => const MartNavigationScreen());
+
     } catch (e) {
-      print('❌ [HOME_SCREEN_TWO] Error checking mart availability: $e');
-      print('📱 [HOME_SCREEN_TWO] Showing COMING SOON dialog due to error');
-      // Show coming soon dialog on error
+      debugPrint("❌ Mart check failed: $e");
       ComingSoonDialogHelper.show(
         title: "COMING SOON".tr,
-        message:
-            "We're working hard to bring Jippy Mart to your area. Stay tuned for updates!",
+        message: "We're working hard to bring Jippy Mart to your area. Stay tuned!",
       );
-      print(
-          '🚀 [HOME_SCREEN_TWO] ===== MART NAVIGATION COMPLETED (ERROR) =====\n');
     }
   }
+
+  // // Check if mart is available in current zone
+  // static Future<void> _checkMartAvailability() async {
+  //   try {
+  //     final martVendors = await MartZoneUtils.getMartVendorsForCurrentZone();
+  //     if (martVendors.isEmpty) {
+  //       ComingSoonDialogHelper.show(
+  //         title: "COMING SOON".tr,
+  //         message:
+  //             "We're working hard to bring Jippy Mart to your area. Stay tuned for updates!",
+  //       );
+  //     } else {
+  //       final isMartTemporarilyClosed =
+  //           await MartZoneUtils.isMartTemporarilyClosedInCurrentZone();
+  //       if (isMartTemporarilyClosed) {
+  //         // Show mart available hours dialog
+  //         ComingSoonDialogHelper.show(
+  //           title: "Mart Available from 7AM to 9PM".tr,
+  //           message: "",
+  //         );
+  //       } else {
+  //         // Navigate to mart navigation screen
+  //         Get.to(() => const MartNavigationScreen());
+  //       }
+  //     }
+  //
+  //   } catch (e) {
+  //     ComingSoonDialogHelper.show(
+  //       title: "COMING SOON".tr,
+  //       message:
+  //           "We're working hard to bring Jippy Mart to your area. Stay tuned for updates!",
+  //     );
+  //
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -129,73 +145,11 @@ class HomeScreenTwo extends StatelessWidget {
       init: HomeController(),
       builder: (controller) {
         return Scaffold(
-          // backgroundColor: themeChange.getThem()
-          //     ? AppThemeData.surfaceDark
-          //     : AppThemeData.surface,
-          floatingActionButton: Stack(
-            children: [
-              const Positioned(
-                bottom: 0,
-                left: 16,
-                right: 0,
-                child: MiniCartBar(),
-              ),
-              Positioned(
-                bottom: cartItem.isNotEmpty
-                    ? 100
-                    : 16, // Position above mini cart if active, otherwise at bottom
-                right: 0, // Consistent right margin
-                child: FloatingActionButton(
-                  onPressed: () async {
-                    // WhatsApp number - you can change this to your desired number
-                    const String phoneNumber =
-                        '+919390579864'; // Your actual WhatsApp number
-                    const String message =
-                        'Hello! I need help with my order.'; // Customize the message
-
-                    final Uri whatsappUrl = Uri.parse(
-                        'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}');
-
-                    try {
-                      if (await canLaunchUrl(whatsappUrl)) {
-                        await launchUrl(whatsappUrl,
-                            mode: LaunchMode.externalApplication);
-                      } else {
-                        // Fallback to regular phone call if WhatsApp is not available
-                        final Uri phoneUrl = Uri.parse('tel:$phoneNumber');
-                        if (await canLaunchUrl(phoneUrl)) {
-                          await launchUrl(phoneUrl,
-                              mode: LaunchMode.externalApplication);
-                        }
-                      }
-                    } catch (e) {
-                      print('Error launching WhatsApp: $e');
-                    }
-                  },
-                  backgroundColor: Colors.green, // WhatsApp green color
-                  child: Padding(
-                    padding: const EdgeInsets.all(0.0),
-                    child: SvgPicture.asset(
-                      'assets/images/whatsapp.svg',
-                      width: 44,
-                      height: 44,
-                      colorFilter: const ColorFilter.mode(
-                        Colors.white,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
           body:Container(
             decoration: BoxDecoration(
-              color: themeChange.getThem()
-                  ? AppThemeData.surfaceDark
-                  : AppThemeData.surface,
               image: DecorationImage(
-                image: AssetImage('assets/images/homebackground.png'),
+                image: AssetImage(ImageConst.backgroundImage,
+                ),
                 fit: BoxFit.cover, // can use contain, fill, repeat
               ),
             ),
@@ -986,6 +940,60 @@ class HomeScreenTwo extends StatelessWidget {
                         ),
             ),
           ),
+          floatingActionButton: Stack(
+            children: [
+              const Positioned(
+                bottom: 0,
+                left: 16,
+                right: 0,
+                child: MiniCartBar(),
+              ),
+              Positioned(
+                bottom: cartItem.isNotEmpty
+                    ? 100
+                    : 16, // Position above mini cart if active, otherwise at bottom
+                right: 0, // Consistent right margin
+                child: FloatingActionButton(
+                  onPressed: () async {
+                    const String phoneNumber =
+                        '+919390579864'; // Your actual WhatsApp number
+                    const String message =
+                        'Hello! I need help with my order.'; // Customize the message
+                    final Uri whatsappUrl = Uri.parse(
+                        'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}');
+                    try {
+                      if (await canLaunchUrl(whatsappUrl)) {
+                        await launchUrl(whatsappUrl,
+                            mode: LaunchMode.externalApplication);
+                      } else {
+                        final Uri phoneUrl = Uri.parse('tel:$phoneNumber');
+                        if (await canLaunchUrl(phoneUrl)) {
+                          await launchUrl(phoneUrl,
+                              mode: LaunchMode.externalApplication);
+                        }
+                      }
+                    } catch (e) {
+                      print('Error launching WhatsApp: $e');
+                    }
+                  },
+                  backgroundColor: Colors.green, // WhatsApp green color
+                  child: Padding(
+                    padding: const EdgeInsets.all(0.0),
+                    child: SvgPicture.asset(
+                      'assets/images/whatsapp.svg',
+                      width: 44,
+                      height: 44,
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
         );
       },
     );
@@ -1358,24 +1366,24 @@ class CategoryView extends StatelessWidget {
                     });
                   },
                   child: Container(
-                    margin: const EdgeInsets.only(right: 12),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      // border: Border.all(
-                      //   color: Colors.greenAccent,
-                      //   width: 1.2,
-                      // ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.15),
-                          blurRadius: 6,
-                          spreadRadius: 2,
-                          offset: const Offset(2, 3),
-                        ),
-                      ],
-                    ),
+                    margin: const EdgeInsets.only(right: 0),
+                    padding: const EdgeInsets.only(right: 8,),
+                    // decoration: BoxDecoration(
+                    //   color: Colors.white,
+                    //   borderRadius: BorderRadius.circular(16),
+                    //   // border: Border.all(
+                    //   //   color: Colors.greenAccent,
+                    //   //   width: 1.2,
+                    //   // ),
+                    //   boxShadow: [
+                    //     BoxShadow(
+                    //       color: Colors.grey.withOpacity(0.15),
+                    //       blurRadius: 6,
+                    //       spreadRadius: 2,
+                    //       offset: const Offset(2, 3),
+                    //     ),
+                    //   ],
+                    // ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

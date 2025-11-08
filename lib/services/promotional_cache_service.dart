@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:customer/utils/fire_store_utils.dart';
 
 /// **ULTRA-FAST PROMOTIONAL CACHE SERVICE**

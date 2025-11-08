@@ -165,59 +165,38 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> with SingleTicker
                         const SizedBox(height: 48),
 
                         // Phone number input with enhanced design
-                        Container(
-                          // decoration: BoxDecoration(
-                          //   color: isDark ? AppThemeData.grey800.withOpacity(0.5) : Colors.white,
-                          //   borderRadius: BorderRadius.circular(16),
-                          //   border: Border.all(
-                          //     color: isDark
-                          //         ? AppThemeData.grey700.withOpacity(0.5)
-                          //         : AppThemeData.grey200,
-                          //     width: 1,
-                          //   ),
-                          //   boxShadow: [
-                          //     BoxShadow(
-                          //       color: isDark
-                          //           ? Colors.black.withOpacity(0.2)
-                          //           : Colors.black.withOpacity(0.04),
-                          //       blurRadius: 10,
-                          //       offset: const Offset(0, 4),
-                          //     ),
-                          //   ],
-                          // ),
-                          child: TextFieldWidget(
-                            title: 'Phone Number'.tr,
-                            controller: controller.phoneEditingController.value,
-                            hintText: 'Enter Phone Number'.tr,
-                            textInputType: const TextInputType.numberWithOptions(signed: true, decimal: true),
-                            textInputAction: TextInputAction.done,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(RegExp('[0-9]')),
-                            ],
-                            prefix: CountryCodePicker(
-                              onChanged: (value) {},
-                              dialogTextStyle: TextStyle(
-                                color: isDark ? AppThemeData.grey50 : AppThemeData.grey900,
-                                fontWeight: FontWeight.w500,
-                                fontFamily: AppThemeData.medium,
-                              ),
-                              dialogBackgroundColor: isDark ? AppThemeData.grey800 : AppThemeData.grey100,
-                              initialSelection: 'IN',
-                              countryFilter: const ['IN'],
-                              comparator: (a, b) => b.name!.compareTo(a.name.toString()),
-                              textStyle: TextStyle(
-                                fontSize: 14,
-                                color: isDark ? AppThemeData.grey50 : AppThemeData.grey900,
-                                fontFamily: AppThemeData.medium,
-                              ),
-                              searchDecoration: InputDecoration(
-                                iconColor: isDark ? AppThemeData.grey50 : AppThemeData.grey900,
-                              ),
-                              searchStyle: TextStyle(
-                                color: isDark ? AppThemeData.grey50 : AppThemeData.grey900,
-                                fontWeight: FontWeight.w500,
-                                fontFamily: AppThemeData.medium,
-                              ),
+                        TextFieldWidget(
+                          title: 'Phone Number'.tr,
+                          controller: controller.phoneEditingController.value,
+                          hintText: 'Enter Phone Number'.tr,
+                          textInputType: const TextInputType.numberWithOptions(signed: true, decimal: true),
+                          textInputAction: TextInputAction.done,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(RegExp('[0-9]')),
+                          ],
+                          prefix: CountryCodePicker(
+                            onChanged: (value) {},
+                            dialogTextStyle: TextStyle(
+                              color: isDark ? AppThemeData.grey50 : AppThemeData.grey900,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: AppThemeData.medium,
+                            ),
+                            dialogBackgroundColor: isDark ? AppThemeData.grey800 : AppThemeData.grey100,
+                            initialSelection: 'IN',
+                            countryFilter: const ['IN'],
+                            comparator: (a, b) => b.name!.compareTo(a.name.toString()),
+                            textStyle: TextStyle(
+                              fontSize: 14,
+                              color: isDark ? AppThemeData.grey50 : AppThemeData.grey900,
+                              fontFamily: AppThemeData.medium,
+                            ),
+                            searchDecoration: InputDecoration(
+                              iconColor: isDark ? AppThemeData.grey50 : AppThemeData.grey900,
+                            ),
+                            searchStyle: TextStyle(
+                              color: isDark ? AppThemeData.grey50 : AppThemeData.grey900,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: AppThemeData.medium,
                             ),
                           ),
                         ),
@@ -331,8 +310,7 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> with SingleTicker
                             ],
                           ),
                         ),
-
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 150),
                       ],
                     ),
                   ),

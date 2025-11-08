@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:customer/utils/fire_store_utils.dart';
-import 'package:customer/constant/constant.dart';
 
 class PromotionDebugUtils {
   /// Test specific promotion data

@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:customer/utils/utils/color_const.dart';
 
 class MartProfileScreen extends StatelessWidget {
   const MartProfileScreen({super.key});
@@ -26,12 +27,11 @@ class MartProfileScreen extends StatelessWidget {
         builder: (controller) {
           return CustomScrollView(
             slivers: [
-              // App Bar
               SliverAppBar(
                 expandedHeight: 75,
                 floating: false,
                 pinned: true,
-                backgroundColor: const Color(0xFF5D56F3),
+                backgroundColor: ColorConst.martPrimary,
                 automaticallyImplyLeading: false, // Remove back arrow
                 flexibleSpace: FlexibleSpaceBar(
                   title: const Padding(
@@ -45,11 +45,11 @@ class MartProfileScreen extends StatelessWidget {
                     ),
                   ),
                   background: Container(
-                    decoration: const BoxDecoration(
+                    decoration:  BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [Color(0xFF5D56F3), Color(0xFF4A47D4)],
+                        colors: [ColorConst.martPrimary, ColorConst.martPrimary],
                       ),
                     ),
                   ),
@@ -117,7 +117,7 @@ class MartProfileScreen extends StatelessWidget {
           // Profile Picture with Initials
           CircleAvatar(
             radius: 40,
-            backgroundColor: const Color(0xFF5D56F3),
+            backgroundColor: ColorConst.martPrimary,
             backgroundImage: userModel?.profilePictureURL != null &&
                     userModel!.profilePictureURL!.isNotEmpty
                 ? NetworkImage(userModel.profilePictureURL!)
@@ -169,10 +169,10 @@ class MartProfileScreen extends StatelessWidget {
                   ),
                   child: Text(
                     userModel?.role?.toUpperCase() ?? 'CUSTOMER',
-                    style: const TextStyle(
+                    style:  TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF5D56F3),
+                      color: ColorConst.orangeLight,
                     ),
                   ),
                 ),
@@ -185,9 +185,9 @@ class MartProfileScreen extends StatelessWidget {
             onPressed: () {
               Get.to(() => const MartEditProfileScreen());
             },
-            icon: const Icon(
+            icon:  Icon(
               Icons.edit,
-              color: Color(0xFF5D56F3),
+              color: ColorConst.orangeLight,
             ),
           ),
         ],
@@ -205,7 +205,7 @@ class MartProfileScreen extends StatelessWidget {
             icon: Icons.shopping_bag,
             title: 'Orders',
             value: userModel?.inProgressOrderID?.length.toString() ?? '0',
-            color: const Color(0xFF5D56F3),
+            color:  ColorConst.martPrimary,
           ),
         ),
         const SizedBox(width: 12),
@@ -404,7 +404,7 @@ class MartProfileScreen extends StatelessWidget {
     return ListTile(
       leading: Icon(
         icon,
-        color: isDestructive ? Colors.red : const Color(0xFF5D56F3),
+        color: isDestructive ? Colors.red :ColorConst.martPrimary,
         size: 24,
       ),
       title: Text(

@@ -1,6 +1,3 @@
-// lib/screens/catering_form_screen.dart;
-import 'package:customer/app/splash_screen.dart';
-import 'package:customer/app/video_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/svg.dart';
@@ -100,7 +97,7 @@ class CateringServiceScreen extends StatelessWidget {
                                         if (value != null &&
                                             value.isNotEmpty &&
                                             !RegExp(r'^[0-9]{10}$')
-                                                .hasMatch(value ?? '')) {
+                                                .hasMatch(value )) {
                                           return 'Please enter valid 10-digit mobile number';
                                         }
 

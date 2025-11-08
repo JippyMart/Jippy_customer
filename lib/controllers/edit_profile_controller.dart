@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:customer/app/log_viewer_screen.dart';
 import 'package:customer/constant/constant.dart';
 import 'package:customer/constant/show_toast_dialog.dart';
 import 'package:customer/models/user_model.dart';

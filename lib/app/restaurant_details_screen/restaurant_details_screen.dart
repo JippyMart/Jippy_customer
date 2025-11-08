@@ -1,4 +1,3 @@
-import 'package:customer/app/cart_screen/cart_screen.dart';
 import 'package:customer/app/restaurant_details_screen/widget/restauant_product_list_view.dart';
 import 'package:customer/app/restaurant_details_screen/widget/restaurant_detail_shimmer_widget.dart';
 import 'package:customer/app/restaurant_details_screen/widget/resturant_cupon_list_view.dart';
@@ -17,6 +16,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+
+import '../cart_check_out_page/cart_check_out_screen.dart';
 
 class RestaurantDetailsScreen extends StatelessWidget {
   final String? scrollToProductId;
@@ -293,7 +294,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
                 ? null
                 : InkWell(
                     onTap: () {
-                      Get.to(const CartScreen());
+                      Get.to(const CartCheckOutScreen());
                     },
                     child: SafeArea(
                       child: Container(

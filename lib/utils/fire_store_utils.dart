@@ -70,6 +70,53 @@ import 'package:video_compress/video_compress.dart';
 class FireStoreUtils {
   static FirebaseFirestore fireStore = FirebaseFirestore.instance;
 
+
+  //NEW FUNCTIONS
+  /// Get all vendors for search indexing - WITH ZONE FILTERING
+  static Future<List<VendorModel>> getAllVendorsSearch({int? limit}) async {
+    try {
+      List<VendorModel> vendorList = [];
+      int safeLimit = limit ?? 100;
+
+      Query query;
+
+      // 🔥 CRITICAL: Always filter by current zone
+      if (Constant.selectedZone != null) {
+        query = FirebaseFirestore.instance
+            .collection(CollectionName.vendors)
+            .where('zoneId', isEqualTo: Constant.selectedZone!.id.toString())
+            // .where('isActive', isEqualTo: true)
+            .limit(safeLimit);
+        print('📍 Loading vendors from zone: ${Constant.selectedZone!.name}');
+      } else {
+        // Fallback: load all active vendors if no zone selected
+        query = FirebaseFirestore.instance
+            .collection(CollectionName.vendors)
+            .where('isActive', isEqualTo: true)
+            .limit(safeLimit);
+        print('⚠️ No zone selected, loading all active vendors');
+      }
+
+      QuerySnapshot querySnapshot = await query.get();
+
+      for (var document in querySnapshot.docs) {
+        try {
+          final data = document.data() as Map<String, dynamic>;
+          VendorModel vendorModel = VendorModel.fromJson(data);
+          vendorList.add(vendorModel);
+        } catch (e) {
+          print('❌ Error parsing vendor ${document.id}: $e');
+        }
+      }
+
+      print('✅ Loaded ${vendorList.length} vendors from current zone');
+      return vendorList;
+    } catch (e) {
+      print('❌ Error loading vendors: $e');
+      return [];
+    }
+  }
+
   // **CRITICAL: Database corruption prevention**
   static bool _isDatabaseHealthy = true;
   static int _consecutiveErrors = 0;
@@ -235,14 +282,11 @@ class FireStoreUtils {
         log('getUserProfile: UUID is empty, returning null');
         return null;
       }
-
       log('getUserProfile: Fetching user with UUID: $uuid');
       DocumentSnapshot<Map<String, dynamic>> userDocument =
           await fireStore.collection(CollectionName.users).doc(uuid).get();
-
       log('getUserProfile: Document exists: ${userDocument.exists}');
       log('getUserProfile: Document data: ${userDocument.data()}');
-
       if (userDocument.data() != null) {
         Map<String, dynamic> data =
             Map<String, dynamic>.from(userDocument.data()!);
@@ -2978,6 +3022,63 @@ class FireStoreUtils {
   }
 
   // **SEARCH UTILITY METHODS**
+  static Future<List<ProductModel>> getAllProductsInZone({int? limit}) async {
+    try {
+      List<ProductModel> productList = [];
+      int safeLimit = limit ?? 800;
+
+      // ✅ STEP 1: Get vendors of selected zone
+      List<String> allowedVendorIds = [];
+      if (Constant.selectedZone != null) {
+        print("🔍 Filtering products by zone: ${Constant.selectedZone!.name}");
+        QuerySnapshot vendorSnapshot = await FirebaseFirestore.instance
+            .collection(CollectionName.vendors)
+            .where('zoneId', isEqualTo: Constant.selectedZone!.id.toString())
+            .get();
+        allowedVendorIds =
+            vendorSnapshot.docs.map((e) => e.id.toString()).toList();
+        print("✅ Found ${allowedVendorIds.length} vendors in this zone");
+      }
+
+      // ✅ STEP 2: Query products (only published)
+      Query query = FirebaseFirestore.instance
+          .collection(CollectionName.vendorProducts)
+          // .where('publish', isEqualTo: true)
+          .limit(safeLimit);
+
+      QuerySnapshot querySnapshot = await query.get();
+
+      print('📊 Loaded ${querySnapshot.docs.length} published products (before zone filter)');
+
+      for (var document in querySnapshot.docs) {
+        try {
+          final data = document.data() as Map<String, dynamic>;
+          ProductModel product = ProductModel.fromJson(data);
+
+          // ✅ STEP 3: Keep only products whose vendor is in selected zone
+          if (Constant.selectedZone != null) {
+            if (allowedVendorIds.contains(product.vendorID)) {
+              productList.add(product);
+            }
+          } else {
+            // No zone selected → include all
+            productList.add(product);
+          }
+        } catch (e) {
+          print('❌ Error parsing product ${document.id}: $e');
+        }
+      }
+
+      print('✅ Loaded ${productList.length} zone-filtered products for search');
+      return productList;
+    } catch (e) {
+      print('❌ Error loading all products: $e');
+      if (e.toString().contains('OutOfMemoryError')) {
+        print('🚨 OutOfMemoryError detected! Returning empty list to prevent crash.');
+      }
+      return [];
+    }
+  }
 
   /// Get all vendors for search indexing - MEMORY OPTIMIZED
   static Future<List<VendorModel>> getAllVendors({int? limit}) async {

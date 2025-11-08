@@ -27,15 +27,11 @@ import 'package:customer/payment/orangePayScreen.dart';
 import 'package:customer/payment/paystack/pay_stack_screen.dart';
 import 'package:customer/payment/paystack/pay_stack_url_model.dart';
 import 'package:customer/payment/paystack/paystack_url_genrater.dart';
-// import 'package:customer/payment/stripe_failed_model.dart';
 import 'package:customer/payment/xenditModel.dart';
 import 'package:customer/payment/xenditScreen.dart';
-import 'package:customer/themes/app_them_data.dart';
 import 'package:customer/utils/fire_store_utils.dart';
 import 'package:customer/utils/preferences.dart';
 import 'package:flutter/material.dart';
-// import 'package:flutter_paypal/flutter_paypal.dart';  // Commented out to reduce APK size
-// import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:razorpay_flutter/razorpay_flutter.dart';

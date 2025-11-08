@@ -25,7 +25,7 @@ class ReusableBannerWidget extends StatelessWidget {
   final Function()? onBannerTap;
   final Function()? onPanStart;
   final Function()? onPanEnd;
-
+  final double? width;
   const ReusableBannerWidget({
     super.key,
     required this.banners,
@@ -37,6 +37,7 @@ class ReusableBannerWidget extends StatelessWidget {
     this.onBannerTap,
     this.onPanStart,
     this.onPanEnd,
+    this.width
   });
 
   @override
@@ -49,6 +50,7 @@ class ReusableBannerWidget extends StatelessWidget {
     if (banners.length < 2) {
       return SizedBox(
         height: height,
+        width: width,
         child: GestureDetector(
           onPanStart: (_) => onPanStart?.call(),
           onPanEnd: (_) => onPanEnd?.call(),
@@ -73,6 +75,7 @@ class ReusableBannerWidget extends StatelessWidget {
     // Infinite scrolling implementation
     return SizedBox(
       height: height,
+      width: width,
       child: GestureDetector(
         onPanStart: (_) => onPanStart?.call(),
         onPanEnd: (_) => onPanEnd?.call(),

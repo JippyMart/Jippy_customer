@@ -1,41 +1,17 @@
-import 'dart:developer' as dev;
 
-import 'package:bottom_picker/bottom_picker.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:customer/app/address_screens/address_list_screen.dart';
-import 'package:customer/app/cart_screen/coupon_list_screen.dart';
-import 'package:customer/app/cart_screen/select_payment_screen.dart';
-import 'package:customer/app/cart_screen/widget/cart_bill_details_widget.dart';
 import 'package:customer/app/cart_screen/widget/cart_build_delivery_ui.dart';
-import 'package:customer/app/cart_screen/widget/cart_navigation_bar_widget.dart';
-import 'package:customer/app/restaurant_details_screen/restaurant_details_screen.dart';
-import 'package:customer/app/wallet_screen/wallet_screen.dart';
+
 import 'package:customer/constant/constant.dart';
-import 'package:customer/constant/show_toast_dialog.dart';
 import 'package:customer/controllers/cart_controller.dart';
-import 'package:customer/controllers/mart_navigation_controller.dart';
-import 'package:customer/models/cart_product_model.dart';
 import 'package:customer/models/coupon_model.dart';
-import 'package:customer/models/product_model.dart';
-import 'package:customer/models/user_model.dart';
-import 'package:customer/payment/createRazorPayOrderModel.dart';
-import 'package:customer/payment/rozorpayConroller.dart';
+
 import 'package:customer/themes/app_them_data.dart';
-import 'package:customer/themes/mart_theme.dart';
 import 'package:customer/themes/responsive.dart';
-import 'package:customer/themes/round_button_fill.dart';
-import 'package:customer/themes/text_field_widget.dart';
 import 'package:customer/utils/dark_theme_provider.dart';
-import 'package:customer/utils/fire_store_utils.dart';
-import 'package:customer/utils/mart_zone_utils.dart';
-import 'package:customer/utils/network_image_widget.dart';
 import 'package:customer/widget/my_separator.dart';
-import 'package:customer/widget/special_price_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:provider/provider.dart';
 
 Widget billCartWidget(DarkThemeProvider themeChange, CartController controller,
     BuildContext context) {

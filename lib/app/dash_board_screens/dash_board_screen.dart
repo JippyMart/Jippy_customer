@@ -1,11 +1,13 @@
 import 'package:customer/constant/show_toast_dialog.dart';
 import 'package:customer/app/dash_board_screens/controller/dash_board_controller.dart';
+import 'package:customer/main.dart';
 import 'package:customer/themes/app_them_data.dart';
 import 'package:customer/utils/dark_theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:customer/utils/utils/image_const.dart';
 import 'package:provider/provider.dart';
 
 class DashBoardScreen extends StatelessWidget {
@@ -20,17 +22,21 @@ class DashBoardScreen extends StatelessWidget {
           return PopScope(
             canPop: controller.canPopNow.value,
             onPopInvoked: (didPop) {
-              if (didPop) return; // If already popped, don't handle again
-              final now = DateTime.now();
-              if (controller.currentBackPressTime == null ||
-                  now.difference(controller.currentBackPressTime!) >
-                      const Duration(seconds: 2)) {
-                controller.currentBackPressTime = now;
-                controller.canPopNow.value = false;
-                ShowToastDialog.showToast("Double press to exit".tr);
-              } else {
-                // Second press within 2 seconds - exit the app
-                SystemNavigator.pop();
+              if (didPop) return;
+              if(controller.selectedIndex.value==0){
+                final now = DateTime.now();
+                if (controller.currentBackPressTime == null ||
+                    now.difference(controller.currentBackPressTime!) >
+                        const Duration(seconds: 2)) {
+                  controller.currentBackPressTime = now;
+                  controller.canPopNow.value = false;
+                  ShowToastDialog.showToast("Double press to exit".tr);
+                } else {
+                  // Second press within 2 seconds - exit the app
+                  SystemNavigator.pop();
+                }
+              }else{
+                controller.changeNavbar(0);
               }
             },
             // onPopInvokedWithResult: (didPop, dynamic) {
@@ -45,7 +51,6 @@ class DashBoardScreen extends StatelessWidget {
             //   }
             // },
             child: Scaffold(
-              // body: controller.pageList[controller.selectedIndex.value],
               body: Obx(() => IndexedStack(
                     index: controller.selectedIndex.value,
                     children: controller.pageList.toList(),
@@ -55,31 +60,31 @@ class DashBoardScreen extends StatelessWidget {
                   navigationBarItem(
                     themeChange,
                     index: 0,
-                    assetIcon: "assets/images/ic_home_icon.png",
+                    assetIcon:  ImageConst.homeOne,
                     label: 'Home'.tr,
                     controller: controller,
                   ),
                   navigationBarItem(
                     themeChange,
                     index: 1,
-                    assetIcon: "assets/icons/ic_fav.svg",
+                    assetIcon:ImageConst.favoriteOne,
                     label: 'Favourites'.tr,
                     controller: controller,
                   ),
                   navigationBarItem(
                     themeChange,
                     index: 2,
-                    assetIcon: "assets/icons/ic_orders.svg",
+                    assetIcon: ImageConst.cartOne,
+                    label: 'Cart'.tr,
+                    controller: controller,
+                  ),
+                  navigationBarItem(
+                    themeChange,
+                    index: 3,
+                    assetIcon: ImageConst.orderOne,
                     label: 'Orders'.tr,
                     controller: controller,
                   ),
-                  // navigationBarItem(
-                  //   themeChange,
-                  //   index: 3,
-                  //   assetIcon: "assets/icons/ic_profile.svg",
-                  //   label: 'Profile'.tr,
-                  //   controller: controller,
-                  // ),
                 ];
                 final safeIndex =
                     controller.selectedIndex.value.clamp(0, items.length - 1);
@@ -103,8 +108,7 @@ class DashBoardScreen extends StatelessWidget {
                       ? AppThemeData.grey300
                       : AppThemeData.grey600,
                   onTap: (int index) {
-                    final clampedIndex = index.clamp(0, items.length - 1);
-                    controller.selectedIndex.value = clampedIndex;
+                    controller.changeNavbar(index.clamp(0, items.length - 1));
                   },
                   items: items,
                 );

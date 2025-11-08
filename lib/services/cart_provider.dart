@@ -17,14 +17,13 @@ class CartProvider with ChangeNotifier {
   Stream<List<CartProductModel>> get cartStream => _cartStreamController.stream;
 
   CartProvider() {
-    _initCart();
-    // Ensure cart is loaded when provider is created
+    initCart();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initCart();
+      initCart();
     });
   }
 
-  Future<void> _initCart() async {
+  Future<void> initCart() async {
     if (kDebugMode) {
       print('DEBUG: CartProvider _initCart() called');
     }
@@ -32,17 +31,15 @@ class CartProvider with ChangeNotifier {
     if (kDebugMode) {
       print('DEBUG: CartProvider - Fetched ${_cartItems.length} items from database');
     }
-    
     // Sync with global cartItem list
     cartItem.clear();
     cartItem.addAll(_cartItems);
-    
     if (kDebugMode) {
       print('DEBUG: CartProvider - Synced ${cartItem.length} items to global cartItem');
     }
-    
     // Force stream update
     _cartStreamController.sink.add(_cartItems);
+    notifyListeners();
     print('DEBUG: CartProvider - Stream updated with ${_cartItems.length} items');
   }
 
@@ -52,9 +49,7 @@ class CartProvider with ChangeNotifier {
     print('DEBUG: Cart Provider - Price: ${product.price}');
     print('DEBUG: Cart Provider - DiscountPrice: ${product.discountPrice}');
     print('DEBUG: Cart Provider - PromoId: ${product.promoId}');
-
     await _saveLocationForTaxCalculation();
-    
     _cartItems = await DatabaseHelper.instance.fetchCartProducts();
     print('DEBUG: CartProvider - Fetched ${_cartItems.length} items from database');
     print('DEBUG: CartProvider - Cart items: ${_cartItems.map((item) => '${item.name} (${item.vendorID})').toList()}');
@@ -73,6 +68,7 @@ class CartProvider with ChangeNotifier {
         _cartItems[index].extrasPrice = "0";
       }
       await DatabaseHelper.instance.updateCartProduct(_cartItems[index]);
+      notifyListeners();
     } else {
       // Check if this is a mart item (vendorID starts with "demo_" or contains "mart")
       bool isMartItem = product.vendorID?.startsWith("demo_") == true || 
@@ -87,14 +83,6 @@ class CartProvider with ChangeNotifier {
           !(item.vendorID?.startsWith("demo_") == true || 
             item.vendorID?.contains("mart") == true ||
             item.vendorID?.contains("vendor") == true));
-      
-      // Debug logging
-      print('DEBUG: CartProvider - Adding product: ${product.id}, vendorID: ${product.vendorID}');
-      print('DEBUG: CartProvider - isMartItem: $isMartItem, cartHasFoodItems: $cartHasFoodItems');
-      print('DEBUG: CartProvider - Cart items vendorIDs: ${_cartItems.map((item) => item.vendorID).toList()}');
-      print('DEBUG: CartProvider - Cart items details: ${_cartItems.map((item) => '${item.name} (${item.vendorID})').toList()}');
-      
-      // Allow adding if:
       // 1. Cart is empty, OR
       // 2. Adding mart item and cart only has mart items, OR
       // 3. Adding food item and cart only has food items from same vendor
@@ -105,10 +93,8 @@ class CartProvider with ChangeNotifier {
         await DatabaseHelper.instance.insertCartProduct(product);
         _cartItems.add(product);
       } else {
-        print('DEBUG: CartProvider - CONFLICT DETECTED - isMartItem: $isMartItem, cartHasFoodItems: $cartHasFoodItems');
         if (isMartItem && cartHasFoodItems) {
           ShowToastDialog.showToast("You can't add mart items when you have food items in cart".tr);
-          print('DEBUG: CartProvider - Cannot add mart item, cart has food items - RETURNING FALSE');
         } else if (!isMartItem && cartHasFoodItems) {
           // Show dialog to ask if user wants to replace cart items
           // ignore: use_build_context_synchronously
@@ -117,13 +103,12 @@ class CartProvider with ChangeNotifier {
         } else {
           ShowToastDialog.showToast("You can't add food items when you have mart items in cart".tr);
         }
-        print('DEBUG: CartProvider - Returning false due to conflict');
         return false;
       }
     }
     
     // Force refresh cart data and notify listeners
-    await _initCart();
+    await  initCart();
     print('DEBUG: CartProvider - Cart updated, total items: ${_cartItems.length}');
     notifyListeners();
     return true;
@@ -172,12 +157,14 @@ class CartProvider with ChangeNotifier {
         await DatabaseHelper.instance.deleteCartProduct(product.id!);
         _cartItems.removeAt(index);
         print('DEBUG: CartProvider - Item removed from cart, remaining items: ${_cartItems.length}');
+        notifyListeners();
       } else {
         await DatabaseHelper.instance.updateCartProduct(_cartItems[index]);
         print('DEBUG: CartProvider - Item quantity updated to: $quantity');
       }
     }
-    await _initCart();
+    notifyListeners();
+    await initCart();
     print('DEBUG: CartProvider - Stream updated after removeFromCart');
   }
 
@@ -191,7 +178,7 @@ class CartProvider with ChangeNotifier {
       _cartItems.removeAt(index);
       print('DEBUG: CartProvider - Item removed, remaining items: ${_cartItems.length}');
     }
-    await _initCart();
+    await initCart();
     print('DEBUG: CartProvider - Stream updated after removal');
   }
 
@@ -211,7 +198,7 @@ class CartProvider with ChangeNotifier {
         print('DEBUG: CartProvider - Item quantity updated to: $newQuantity');
       }
     }
-    await _initCart();
+    await initCart();
     print('DEBUG: CartProvider - Stream updated after quantity change');
   }
 
@@ -220,12 +207,13 @@ class CartProvider with ChangeNotifier {
     cartItem.clear();
     await DatabaseHelper.instance.deleteAllCartProducts();
     _cartStreamController.sink.add(_cartItems);
+    notifyListeners();
   }
 
   // Method to manually refresh cart from database
   Future<void> refreshCart() async {
     print('DEBUG: CartProvider refreshCart() called');
-    await _initCart();
+    await initCart();
   }
 
   // Method to force stream update
@@ -244,7 +232,7 @@ class CartProvider with ChangeNotifier {
     
     if (dbItems.length != _cartItems.length) {
       print('DEBUG: CartProvider - Syncing cart with database...');
-      await _initCart();
+      await initCart();
     }
   }
 
@@ -262,15 +250,11 @@ class CartProvider with ChangeNotifier {
             // Clear existing cart items
             await DatabaseHelper.instance.deleteAllCartProducts();
             _cartItems.clear();
-            
             // Add the new item
             product.quantity = quantity;
             await DatabaseHelper.instance.insertCartProduct(product);
             _cartItems.add(product);
-            
-            // Refresh cart data
-            await _initCart();
-            
+            await initCart();
             Get.back(); // Close dialog
             ShowToastDialog.showToast("Cart updated with new restaurant items".tr);
           },

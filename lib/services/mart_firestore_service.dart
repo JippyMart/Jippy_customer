@@ -378,7 +378,6 @@ class MartFirestoreService extends GetxService {
   Future<List<MartCategoryModel>> getCategories({int limit = 100}) async {
     try {
       print('[MART FIRESTORE] 📂 Fetching categories from Firestore...');
-
       // Query Firestore for categories - simplified to avoid index issues
       final querySnapshot = await _firestore
           .collection('mart_categories')
@@ -1825,8 +1824,9 @@ class MartFirestoreService extends GetxService {
           uniqueSections.add(section);
         }
       }
-
+      //
       final sections = uniqueSections.toList()..sort();
+      // final sections = uniqueSections.toList();
       print(
           '[MART FIRESTORE] ✅ Found ${sections.length} unique sections: $sections');
 

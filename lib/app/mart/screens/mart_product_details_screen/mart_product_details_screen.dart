@@ -13,6 +13,7 @@ import 'package:customer/utils/network_image_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:customer/utils/utils/color_const.dart';
 
 class MartProductDetailsScreen extends StatefulWidget {
   final dynamic product;
@@ -972,7 +973,7 @@ class _MartProductDetailsScreenState extends State<MartProductDetailsScreen>
           }
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFE91E63),
+          backgroundColor: ColorConst.orangeLight,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
@@ -1607,7 +1608,7 @@ class _MartProductDetailsScreenState extends State<MartProductDetailsScreen>
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE91E63),
+                          backgroundColor:  ColorConst.orangeLight,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
                               vertical: 4), // Smaller padding

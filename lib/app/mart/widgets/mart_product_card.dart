@@ -8,6 +8,7 @@ import 'package:customer/models/cart_product_model.dart';
 import 'package:customer/utils/network_image_widget.dart';
 import 'package:customer/app/mart/screens/mart_product_details_screen/mart_product_details_screen.dart';
 import 'package:customer/app/cart_screen/cart_screen.dart';
+import 'package:customer/utils/utils/color_const.dart';
 
 class MartProductCard extends StatelessWidget {
   final MartItemModel product;
@@ -421,7 +422,7 @@ class MartProductCard extends StatelessWidget {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 4,
-      color: Colors.white,
+      color:ColorConst.white,
       child: Padding(
         padding: const EdgeInsets.all(8), // 🔑 Reduced padding from 12 to 8
         child: Column(
@@ -445,7 +446,7 @@ class MartProductCard extends StatelessWidget {
                             height: _getResponsiveImageHeight(screenWidth),
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF8F8FF),
+                              color:  ColorConst.white,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: ClipRRect(
@@ -508,7 +509,7 @@ class MartProductCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.purple),
+                        border: Border.all(color:  ColorConst.orangeLight),
                       ),
                       child: Builder(
                         builder: (context) {
@@ -541,7 +542,7 @@ class MartProductCard extends StatelessWidget {
                                       flex: 2,
                                       child: Container(
                                         decoration: BoxDecoration(
-                                          color: Colors.purple.shade100,
+                                          color: ColorConst.orangeLight,
                                           borderRadius: const BorderRadius.only(
                                             bottomLeft: Radius.circular(8),
                                             bottomRight: Radius.circular(8),
@@ -569,7 +570,7 @@ class MartProductCard extends StatelessWidget {
                                   child: Text(
                                     "ADD",
                                     style: TextStyle(
-                                      color: Colors.purple,
+                                      color: ColorConst.orangeLight,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 10,
                                     ),

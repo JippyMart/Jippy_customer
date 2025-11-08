@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:customer/app/category_service/controller/cetegory_service_controller.dart';
 import 'package:customer/app/dash_board_screens/dash_board_screen.dart';
 import 'package:customer/app/mart/screens/mart_categories_screen/mart_categories_screen.dart';
 import 'package:customer/app/mart/screens/mart_categorhy_details_screen/mart_category_detail_screen.dart';

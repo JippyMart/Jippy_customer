@@ -5,6 +5,7 @@ import 'package:customer/controllers/category_detail_controller.dart';
 import 'package:customer/app/mart/widgets/mart_search_widget.dart';
 import 'package:customer/themes/mart_theme.dart';
 import 'package:customer/themes/app_them_data.dart';
+import 'package:customer/utils/utils/color_const.dart';
 
 class MartSearchScreen extends StatefulWidget {
   const MartSearchScreen({Key? key}) : super(key: key);
@@ -258,7 +259,7 @@ class _MartSearchScreenState extends State<MartSearchScreen>
                 // Custom colorful app bar
                 Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF007F73),
+                    color: ColorConst.martPrimary,
                     boxShadow: MartTheme.elevatedShadow,
                   ),
                   child: SafeArea(
@@ -280,7 +281,6 @@ class _MartSearchScreenState extends State<MartSearchScreen>
                             ),
                           ),
                           const SizedBox(width: 16),
-
                           // Title with emoji
                           Expanded(
                             child: Row(
@@ -306,7 +306,6 @@ class _MartSearchScreenState extends State<MartSearchScreen>
                     ),
                   ),
                 ),
-
                 // Search widget with transparent background
                 Expanded(
                   child: Container(

@@ -9,6 +9,7 @@ import 'package:customer/utils/network_image_widget.dart';
 import 'package:customer/app/mart/widgets/mart_product_card.dart';
 import 'package:customer/themes/app_them_data.dart';
 import 'package:customer/themes/mart_theme.dart';
+import 'package:customer/utils/utils/color_const.dart';
 
 class MartCategoryDetailScreen extends StatelessWidget {
   const MartCategoryDetailScreen({super.key});
@@ -43,25 +44,16 @@ class MartCategoryDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(CategoryDetailController());
-    
     return Scaffold(
-      backgroundColor: AppThemeData.homeScreenBackground, // Reusable home screen background
+backgroundColor: ColorConst.white,
       body: Column(
         children: [
-          // Header with search
           _buildHeader(context, controller),
-          
-          // Filter chips row
           _buildFilterChips(controller),
-          
-          // Main content area
           Flexible(
             child: Row(
               children: [
-                // Left sidebar - Categories
                 _buildCategorySidebar(controller),
-
-                // Right content - Products
                 Expanded(
                   child: Align(
                     alignment: Alignment.topLeft, // 🔑 Ensure content starts from top-left
@@ -84,8 +76,10 @@ class MartCategoryDetailScreen extends StatelessWidget {
         right: 16,
         bottom: 8,
       ),
-      decoration: const BoxDecoration(
-        color: MartTheme.jippyMartButton, // Use jippyMartButton color
+      decoration:  BoxDecoration(
+        color:
+        ColorConst.martPrimary,
+        // MartTheme.jippyMartButton, // Use jippyMartButton color
         boxShadow: [
           BoxShadow(
             color: Color(0x1A000000),
@@ -282,7 +276,7 @@ class MartCategoryDetailScreen extends StatelessWidget {
     return Container(
       width: 80,
       decoration: BoxDecoration(
-        color: AppThemeData.homeScreenBackground, // Reusable home screen background
+        color: ColorConst.white, // Reusable home screen background
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -428,11 +422,10 @@ class MartCategoryDetailScreen extends StatelessWidget {
       if (controller.isLoadingProducts.value) {
         return const Center(
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF292966)),
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF292966),),
           ),
         );
       }
-
       if (controller.errorMessage.value.isNotEmpty) {
         return Center(
           child: Column(
@@ -552,10 +545,8 @@ class MartCategoryDetailScreen extends StatelessWidget {
                 final isTablet = screenWidth > 600;
                 final isLargePhone = screenWidth > 400;
                 
-                // Calculate dynamic values based on screen size
                 final crossAxisCount = isTablet ? 3 : 2;
                 final spacing = isTablet ? 12.0 : (isLargePhone ? 8.0 : 4.0);
-                final aspectRatio = isTablet ? 0.65 : (isLargePhone ? 0.58 : 0.52);
                 final horizontalPadding = isTablet ? 16.0 : (isLargePhone ? 8.0 : 4.0);
                 
                 // 🔑 Auto-adjustable layout using Wrap for truly flexible card heights

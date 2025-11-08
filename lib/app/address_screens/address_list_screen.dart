@@ -1,3 +1,4 @@
+import 'package:geolocator/geolocator.dart';
 import 'package:customer/constant/constant.dart';
 import 'package:customer/constant/show_toast_dialog.dart';
 import 'package:customer/controllers/address_list_controller.dart';
@@ -507,83 +508,362 @@ class AddressListScreen extends StatelessWidget {
                                       ),
                                     ),
                                     const SizedBox(height: 8),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: themeChange.getThem() ? AppThemeData.grey700 : AppThemeData.grey300,
+                            InkWell(
+                              onTap: () async {
+                                print("log is working");
+                                if (Constant.selectedMapType == 'osm') {
+                                  final result = await Get.to(() => MapPickerPage());
+                                  if (result != null) {
+                                    final firstPlace = result;
+                                    final lat = firstPlace.coordinates.latitude;
+                                    final lng = firstPlace.coordinates.longitude;
+                                    final address = firstPlace.address;
+                                    controller.localityEditingController.value.text = address.toString();
+                                    controller.localityText.value = address.toString();
+                                    controller.location.value = UserLocation(latitude: lat, longitude: lng);
+                                  }
+                                } else {
+                                  // ✅ 1. Check location permission and service
+                                  bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+                                  if (!serviceEnabled) {
+                                    // Show message or open location settings
+                                    Get.snackbar("Location Disabled", "Please enable location services.");
+                                    await Geolocator.openLocationSettings();
+                                    return;
+                                  }
+
+                                  LocationPermission permission = await Geolocator.checkPermission();
+                                  if (permission == LocationPermission.denied) {
+                                    permission = await Geolocator.requestPermission();
+                                    if (permission == LocationPermission.denied) {
+                                      Get.snackbar("Permission Denied", "Location permission is required.");
+                                      return;
+                                    }
+                                  }
+                                  if (permission == LocationPermission.deniedForever) {
+                                    Get.snackbar(
+                                      "Permission Denied Forever",
+                                      "Please enable location permission in Settings.",
+                                    );
+                                    await Geolocator.openAppSettings();
+                                    return;
+                                  }
+                                  // ✅ 2. Safe to open PlacePicker now
+                                  Get.to(() => PlacePicker(
+                                    apiKey: Constant.mapAPIKey,
+                                    onPlacePicked: (result) {
+                                      controller.localityEditingController.value.text =
+                                          result.formattedAddress!.toString();
+                                      controller.localityText.value =
+                                          result.formattedAddress!.toString();
+                                      controller.location.value = UserLocation(
+                                        latitude: result.geometry!.location.lat,
+                                        longitude: result.geometry!.location.lng,
+                                      );
+                                      Get.back();
+                                    },
+                                    initialPosition: const LatLng(-33.8567844, 151.213108),
+                                    useCurrentLocation: true,
+                                    selectInitialPosition: true,
+                                    usePinPointingSearch: true,
+                                    usePlaceDetailSearch: true,
+                                    zoomGesturesEnabled: true,
+                                    zoomControlsEnabled: true,
+                                    resizeToAvoidBottomInset: false,
+                                  ));
+                                  // Get.to(() => PlacePicker(
+                                  //   apiKey: Constant.mapAPIKey,
+                                  //   onPlacePicked: (result) {
+                                  //     controller.localityEditingController.value.text = result.formattedAddress!.toString();
+                                  //     controller.localityText.value = result.formattedAddress!.toString();
+                                  //     controller.location.value = UserLocation(
+                                  //       latitude: result.geometry!.location.lat,
+                                  //       longitude: result.geometry!.location.lng,
+                                  //     );
+                                  //     Get.back();
+                                  //   },
+                                  //   initialPosition: const LatLng(-33.8567844, 151.213108),
+                                  //   useCurrentLocation: true,
+                                  //   selectInitialPosition: true,
+                                  //   usePinPointingSearch: true,
+                                  //   usePlaceDetailSearch: true,
+                                  //   zoomGesturesEnabled: true,
+                                  //   zoomControlsEnabled: true,
+                                  //   resizeToAvoidBottomInset: false,
+                                  // ),);
+                                  // Navigator.push(
+                                  //   context,
+                                  //   MaterialPageRoute(
+                                  //     builder: (context) => PlacePicker(
+                                  //       apiKey: Constant.mapAPIKey,
+                                  //       onPlacePicked: (result) {
+                                  //         controller.localityEditingController.value.text = result.formattedAddress!.toString();
+                                  //         controller.localityText.value = result.formattedAddress!.toString();
+                                  //         controller.location.value = UserLocation(
+                                  //           latitude: result.geometry!.location.lat,
+                                  //           longitude: result.geometry!.location.lng,
+                                  //         );
+                                  //         Get.back();
+                                  //       },
+                                  //       initialPosition: const LatLng(-33.8567844, 151.213108),
+                                  //       useCurrentLocation: true,
+                                  //       selectInitialPosition: true,
+                                  //       usePinPointingSearch: true,
+                                  //       usePlaceDetailSearch: true,
+                                  //       zoomGesturesEnabled: true,
+                                  //       zoomControlsEnabled: true,
+                                  //       resizeToAvoidBottomInset: false,
+                                  //     ),
+                                  //   ),
+                                  // );
+                                }
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: themeChange.getThem()
+                                        ? AppThemeData.grey700
+                                        : AppThemeData.grey300,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: IgnorePointer( // 👈 prevents TextField from catching taps
+                                        child: TextField(
+                                          controller: controller.localityEditingController.value,
+                                          readOnly: true,
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: themeChange.getThem()
+                                                ? AppThemeData.grey50
+                                                : AppThemeData.grey900,
+                                          ),
+                                          decoration: InputDecoration(
+                                            hintText: 'Please add address using icon'.tr,
+                                            hintStyle: TextStyle(
+                                              color: themeChange.getThem()
+                                                  ? AppThemeData.grey700
+                                                  : AppThemeData.grey300,
+                                            ),
+                                            border: InputBorder.none,
+                                            contentPadding:
+                                            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                          ),
                                         ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: TextField(
-                                              controller: controller.localityEditingController.value,
-                                              readOnly: true, // Make field read-only
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey900,
-                                              ),
-                                              decoration: InputDecoration(
-                                                hintText: 'Please add address using icon'.tr,
-                                                hintStyle: TextStyle(
-                                                  color: themeChange.getThem() ? AppThemeData.grey700 : AppThemeData.grey300,
-                                                ),
-                                                border: InputBorder.none,
-                                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                              ),
-                                            ),
-                                          ),
-                                          InkWell(
-                                            onTap: () async {
-                                              if (Constant.selectedMapType == 'osm') {
-                                                final result = await Get.to(() => MapPickerPage());
-                                                if (result != null) {
-                                                  final firstPlace = result;
-                                                  final lat = firstPlace.coordinates.latitude;
-                                                  final lng = firstPlace.coordinates.longitude;
-                                                  final address = firstPlace.address;
-                                                  controller.localityEditingController.value.text = address.toString();
-                                                  controller.localityText.value = address.toString(); // Update reactive string
-                                                  controller.location.value = UserLocation(latitude: lat, longitude: lng);
-                                                }
-                                              } else {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) => PlacePicker(
-                                                      apiKey: Constant.mapAPIKey,
-                                                      onPlacePicked: (result) {
-                                                        controller.localityEditingController.value.text = result.formattedAddress!.toString();
-                                                        controller.localityText.value = result.formattedAddress!.toString(); // Update reactive string
-                                                        controller.location.value = UserLocation(latitude: result.geometry!.location.lat, longitude: result.geometry!.location.lng);
-                                                        Get.back();
-                                                      },
-                                                      initialPosition: const LatLng(-33.8567844, 151.213108),
-                                                      useCurrentLocation: true,
-                                                      selectInitialPosition: true,
-                                                      usePinPointingSearch: true,
-                                                      usePlaceDetailSearch: true,
-                                                      zoomGesturesEnabled: true,
-                                                      zoomControlsEnabled: true,
-                                                      resizeToAvoidBottomInset: false,
-                                                    ),
-                                                  ),
-                                                );
-                                              }
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.all(12),
-                                              child: Icon(
-                                                Icons.location_on,
-                                                color: AppThemeData.primary300,
-                                                size: 20,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
                                       ),
                                     ),
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Icon(
+                                        Icons.location_on,
+                                        color: AppThemeData.primary300,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            // InkWell(
+                                    //   onTap: () async {
+                                    //     print("log is working");
+                                    //     if (Constant.selectedMapType == 'osm') {
+                                    //       final result = await Get.to(() => MapPickerPage());
+                                    //       if (result != null) {
+                                    //         final firstPlace = result;
+                                    //         final lat = firstPlace.coordinates.latitude;
+                                    //         final lng = firstPlace.coordinates.longitude;
+                                    //         final address = firstPlace.address;
+                                    //         controller.localityEditingController.value.text = address.toString();
+                                    //         controller.localityText.value = address.toString(); // Update reactive string
+                                    //         controller.location.value = UserLocation(latitude: lat, longitude: lng);
+                                    //       }
+                                    //     } else {
+                                    //       Navigator.push(
+                                    //         context,
+                                    //         MaterialPageRoute(
+                                    //           builder: (context) => PlacePicker(
+                                    //             apiKey: Constant.mapAPIKey,
+                                    //             onPlacePicked: (result) {
+                                    //               controller.localityEditingController.value.text = result.formattedAddress!.toString();
+                                    //               controller.localityText.value = result.formattedAddress!.toString(); // Update reactive string
+                                    //               controller.location.value = UserLocation(latitude: result.geometry!.location.lat, longitude: result.geometry!.location.lng);
+                                    //               Get.back();
+                                    //             },
+                                    //             initialPosition: const LatLng(-33.8567844, 151.213108),
+                                    //             useCurrentLocation: true,
+                                    //             selectInitialPosition: true,
+                                    //             usePinPointingSearch: true,
+                                    //             usePlaceDetailSearch: true,
+                                    //             zoomGesturesEnabled: true,
+                                    //             zoomControlsEnabled: true,
+                                    //             resizeToAvoidBottomInset: false,
+                                    //           ),
+                                    //         ),
+                                    //       );
+                                    //     }
+                                    //   },
+                                    //   child: Container(
+                                    //     decoration: BoxDecoration(
+                                    //       border: Border.all(
+                                    //         color: themeChange.getThem() ? AppThemeData.grey700 : AppThemeData.grey300,
+                                    //       ),
+                                    //       borderRadius: BorderRadius.circular(8),
+                                    //     ),
+                                    //     child:  InkWell(
+                                    //       onTap: () async {
+                                    //         print("log is working");
+                                    //         if (Constant.selectedMapType == 'osm') {
+                                    //           final result = await Get.to(() => MapPickerPage());
+                                    //           if (result != null) {
+                                    //             final firstPlace = result;
+                                    //             final lat = firstPlace.coordinates.latitude;
+                                    //             final lng = firstPlace.coordinates.longitude;
+                                    //             final address = firstPlace.address;
+                                    //             controller.localityEditingController.value.text = address.toString();
+                                    //             controller.localityText.value = address.toString(); // Update reactive string
+                                    //             controller.location.value = UserLocation(latitude: lat, longitude: lng);
+                                    //           }
+                                    //         } else {
+                                    //           Navigator.push(
+                                    //             context,
+                                    //             MaterialPageRoute(
+                                    //               builder: (context) => PlacePicker(
+                                    //                 apiKey: Constant.mapAPIKey,
+                                    //                 onPlacePicked: (result) {
+                                    //                   controller.localityEditingController.value.text = result.formattedAddress!.toString();
+                                    //                   controller.localityText.value = result.formattedAddress!.toString(); // Update reactive string
+                                    //                   controller.location.value = UserLocation(latitude: result.geometry!.location.lat, longitude: result.geometry!.location.lng);
+                                    //                   Get.back();
+                                    //                 },
+                                    //                 initialPosition: const LatLng(-33.8567844, 151.213108),
+                                    //                 useCurrentLocation: true,
+                                    //                 selectInitialPosition: true,
+                                    //                 usePinPointingSearch: true,
+                                    //                 usePlaceDetailSearch: true,
+                                    //                 zoomGesturesEnabled: true,
+                                    //                 zoomControlsEnabled: true,
+                                    //                 resizeToAvoidBottomInset: false,
+                                    //               ),
+                                    //             ),
+                                    //           );
+                                    //         }
+                                    //       },
+                                    //       child: Row(
+                                    //         children: [
+                                    //           Expanded(
+                                    //             child:     InkWell(
+                                    //               onTap: () async {
+                                    //                 print("log is working");
+                                    //                 if (Constant.selectedMapType == 'osm') {
+                                    //                   final result = await Get.to(() => MapPickerPage());
+                                    //                   if (result != null) {
+                                    //                     final firstPlace = result;
+                                    //                     final lat = firstPlace.coordinates.latitude;
+                                    //                     final lng = firstPlace.coordinates.longitude;
+                                    //                     final address = firstPlace.address;
+                                    //                     controller.localityEditingController.value.text = address.toString();
+                                    //                     controller.localityText.value = address.toString(); // Update reactive string
+                                    //                     controller.location.value = UserLocation(latitude: lat, longitude: lng);
+                                    //                   }
+                                    //                 } else {
+                                    //                   Navigator.push(
+                                    //                     context,
+                                    //                     MaterialPageRoute(
+                                    //                       builder: (context) => PlacePicker(
+                                    //                         apiKey: Constant.mapAPIKey,
+                                    //                         onPlacePicked: (result) {
+                                    //                           controller.localityEditingController.value.text = result.formattedAddress!.toString();
+                                    //                           controller.localityText.value = result.formattedAddress!.toString(); // Update reactive string
+                                    //                           controller.location.value = UserLocation(latitude: result.geometry!.location.lat, longitude: result.geometry!.location.lng);
+                                    //                           Get.back();
+                                    //                         },
+                                    //                         initialPosition: const LatLng(-33.8567844, 151.213108),
+                                    //                         useCurrentLocation: true,
+                                    //                         selectInitialPosition: true,
+                                    //                         usePinPointingSearch: true,
+                                    //                         usePlaceDetailSearch: true,
+                                    //                         zoomGesturesEnabled: true,
+                                    //                         zoomControlsEnabled: true,
+                                    //                         resizeToAvoidBottomInset: false,
+                                    //                       ),
+                                    //                     ),
+                                    //                   );
+                                    //                 }
+                                    //               },
+                                    //               child: TextField(
+                                    //                 controller: controller.localityEditingController.value,
+                                    //                 readOnly: true, // Make field read-only
+                                    //                 style: TextStyle(
+                                    //                   fontSize: 16,
+                                    //                   color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey900,
+                                    //                 ),
+                                    //                 decoration: InputDecoration(
+                                    //                   hintText: 'Please add address using icon'.tr,
+                                    //                   hintStyle: TextStyle(
+                                    //                     color: themeChange.getThem() ? AppThemeData.grey700 : AppThemeData.grey300,
+                                    //                   ),
+                                    //                   border: InputBorder.none,
+                                    //                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    //                 ),
+                                    //               ),
+                                    //             ),
+                                    //           ),
+                                    //           InkWell(
+                                    //             onTap: () async {
+                                    //               if (Constant.selectedMapType == 'osm') {
+                                    //                 final result = await Get.to(() => MapPickerPage());
+                                    //                 if (result != null) {
+                                    //                   final firstPlace = result;
+                                    //                   final lat = firstPlace.coordinates.latitude;
+                                    //                   final lng = firstPlace.coordinates.longitude;
+                                    //                   final address = firstPlace.address;
+                                    //                   controller.localityEditingController.value.text = address.toString();
+                                    //                   controller.localityText.value = address.toString(); // Update reactive string
+                                    //                   controller.location.value = UserLocation(latitude: lat, longitude: lng);
+                                    //                 }
+                                    //               } else {
+                                    //                 Navigator.push(
+                                    //                   context,
+                                    //                   MaterialPageRoute(
+                                    //                     builder: (context) => PlacePicker(
+                                    //                       apiKey: Constant.mapAPIKey,
+                                    //                       onPlacePicked: (result) {
+                                    //                         controller.localityEditingController.value.text = result.formattedAddress!.toString();
+                                    //                         controller.localityText.value = result.formattedAddress!.toString(); // Update reactive string
+                                    //                         controller.location.value = UserLocation(latitude: result.geometry!.location.lat, longitude: result.geometry!.location.lng);
+                                    //                         Get.back();
+                                    //                       },
+                                    //                       initialPosition: const LatLng(-33.8567844, 151.213108),
+                                    //                       useCurrentLocation: true,
+                                    //                       selectInitialPosition: true,
+                                    //                       usePinPointingSearch: true,
+                                    //                       usePlaceDetailSearch: true,
+                                    //                       zoomGesturesEnabled: true,
+                                    //                       zoomControlsEnabled: true,
+                                    //                       resizeToAvoidBottomInset: false,
+                                    //                     ),
+                                    //                   ),
+                                    //                 );
+                                    //               }
+                                    //             },
+                                    //             child: Container(
+                                    //               padding: const EdgeInsets.all(12),
+                                    //               child: Icon(
+                                    //                 Icons.location_on,
+                                    //                 color: AppThemeData.primary300,
+                                    //                 size: 20,
+                                    //               ),
+                                    //             ),
+                                    //           ),
+                                    //         ],
+                                    //       ),
+                                    //     ),
+                                    //   ),
+                                    // ),
                                   ],
                                 ),
                                 TextFieldWidget(

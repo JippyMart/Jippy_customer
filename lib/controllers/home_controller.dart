@@ -185,10 +185,8 @@ class HomeController extends GetxController {
     return PerformanceOptimizer.measureAsync('parallel_data_fetch', () async {
       isLoading.value = true;
       print('[DEBUG] Starting parallel data fetch');
-
       // Load cart data first (needed for UI)
       getCartData();
-
       // **CRITICAL: Load location and zone first, then load other data in parallel**
       await _ensureUserModelIsLoaded();
       await _ensureUserLocationIsSet();

@@ -1,4 +1,3 @@
-import 'package:customer/app/auth_screen/login_screen.dart';
 import 'package:customer/app/auth_screen/phone_number_screen.dart';
 import 'package:customer/app/change%20langauge/change_language_screen.dart';
 import 'package:customer/app/chat_screens/driver_inbox_screen.dart';
@@ -7,9 +6,7 @@ import 'package:customer/app/dine_in_booking/dine_in_booking_screen.dart';
 import 'package:customer/app/dine_in_screeen/dine_in_screen.dart';
 import 'package:customer/app/edit_profile_screen/edit_profile_screen.dart';
 import 'package:customer/app/gift_card/gift_card_screen.dart';
-import 'package:customer/app/refer_friend_screen/refer_friend_screen.dart';
 import 'package:customer/app/terms_and_condition/terms_and_condition_screen.dart';
-import 'package:customer/app/address_screens/address_list_screen.dart';
 import 'package:customer/constant/constant.dart';
 import 'package:customer/constant/show_toast_dialog.dart';
 import 'package:customer/controllers/cart_controller.dart';
@@ -188,7 +185,7 @@ class ProfileScreen extends StatelessWidget {
                                     cardDecoration(themeChange, controller, "assets/icons/ic_change_language.svg", "Change Language".tr, () {
                                       Get.to(const ChangeLanguageScreen());
                                     }),
-                                    cardDecoration(themeChange, controller, "assets/icons/ic_light_dark.svg", "Dark Mode".tr, () {}),
+                                    // cardDecoration(themeChange, controller, "assets/icons/ic_light_dark.svg", "Dark Mode".tr, () {}),
                                   ],
                                 ),
                               ),

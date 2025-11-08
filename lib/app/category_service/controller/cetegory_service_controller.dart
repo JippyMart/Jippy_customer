@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:customer/app/category_service/model/category_service_model.dart';
-import 'package:customer/app/video_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;

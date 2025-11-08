@@ -93,6 +93,250 @@ import '../models/product_model.dart';
 
 class CartController extends GetxController
     with CrashPreventionMixin, SystemCallOptimizerMixin {
+  // Add this method to your CartController class
+  Future<void> showPaymentMethodDialog(BuildContext context) async {
+    final canProceed = await validateAndPlaceOrderBulletproof();
+    if (!canProceed) {
+      return;
+    }
+    await Get.dialog(
+      WillPopScope(
+        onWillPop: () async {
+          selectedPaymentMethod.value = '';
+          return true;
+        },
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.payment,
+                color: Colors.orange,
+                size: 24,
+              ),
+              SizedBox(width: 10),
+              Text(
+                "Select Payment Method",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: Obx(
+                () =>
+           Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Choose how you want to pay for your order:",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                SizedBox(height: 20),
+                // COD Option
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: RadioListTile<String>(
+                    contentPadding: EdgeInsets.all(4),
+                    title: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Image.asset(
+                          "assets/images/ic_cash.png",
+                          width: 30,
+                          height: 30,
+                        ),
+                        SizedBox(
+                          width: 150,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Cash on Delivery",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              Text(
+                                "Pay when you receive your order",
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey[600],
+                                ),
+                                maxLines: 2,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    value: PaymentGateway.cod.name,
+                    groupValue: selectedPaymentMethod.value,
+                    onChanged: (value) {
+                      selectedPaymentMethod.value = value!;
+                    },
+                    activeColor: Colors.orange,
+                  ),
+                ),
+
+                SizedBox(height: 10),
+
+                // Razorpay Option
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: RadioListTile<String>(
+                    contentPadding: EdgeInsets.all(4),
+                    title: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Image.asset(
+                          "assets/images/razorpay.png",
+                          width: 30,
+                          height: 30,
+                        ),
+                        SizedBox(
+                          width: 150,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Online Payment",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              Text(
+                                "Pay securely with Razorpay",
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    value: PaymentGateway.razorpay.name,
+                    groupValue: selectedPaymentMethod.value,
+                    onChanged: (value) {
+                      selectedPaymentMethod.value = value!;
+                    },
+                    activeColor: Colors.orange,
+                  ),
+                ),
+
+                SizedBox(height: 10),
+                // Validation messages
+                if (subTotal.value > 599)
+                  Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange[200]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info, color: Colors.orange, size: 16),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            "COD not available for orders above ₹599",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange[800],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (hasPromotionalItems())
+                  Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange[200]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info, color: Colors.orange, size: 16),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            "COD not available for promotional items",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange[800],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            // Cancel Button
+            TextButton(
+              onPressed: () {
+                selectedPaymentMethod.value = '';
+                Get.back();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.grey[600],
+              ),
+              child: Text("Cancel"),
+            ),
+            // OK/Proceed Button
+            ElevatedButton(
+              onPressed: () {
+                Get.back();
+                _processSelectedPaymentMethod();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text("Proceed to Pay"),
+            ),
+          ],
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+// Add this helper method to process the selected payment
+  void _processSelectedPaymentMethod() {
+    // The actual payment processing will happen when user clicks "Pay Now" again
+    // This just sets the payment method and closes the dialog
+    print("Payment method selected: ${selectedPaymentMethod.value}");
+  }
+
   Future<Map<String, dynamic>> getWeather(double lat, double lon) async {
     print(" getWeather ");
     const apiKey = "7885eed00855633516f769cf3646aace"; // 🔑 Add your key
@@ -636,35 +880,25 @@ class CartController extends GetxController
 
   @override
   void onInit() {
-    // selectedAddress.value = Constant.selectedLocation;
     super.onInit();
-    print(
-        '🚀 DEBUG: CartController onInit() called - Profile validation starting...');
+    Future.delayed(const Duration(seconds: 3), () {
+      _restorePaymentState().then((_) {
+        if (isPaymentInProgress.value && _lastPaymentId != null) {
+          _checkPendingPaymentAndRecover();
+        }
+      });
+      _initializeAddressWithPriority();
+      getCartData();
+      getPaymentSettings();
+      validateUserProfile();
+      ever(subTotal, (_) {
+        if (subTotal.value > 599 &&
+            selectedPaymentMethod.value == PaymentGateway.cod.name) {
+          selectedPaymentMethod.value = PaymentGateway.razorpay.name;
+        }
+      });
+    }); // });
 
-    // 🔑 RESTORE PAYMENT STATE ON APP STARTUP (HANDLES APP KILLS)
-    _restorePaymentState().then((_) {
-      // Check if we have a pending payment after app restart
-      if (isPaymentInProgress.value && _lastPaymentId != null) {
-        print('🔑 PENDING PAYMENT DETECTED - Checking if order was placed...');
-        _checkPendingPaymentAndRecover();
-      }
-    });
-
-    // **FIXED: Use existing bulletproof address validation method**
-    _initializeAddressWithPriority();
-    getCartData();
-    getPaymentSettings();
-
-    // Test profile validation immediately
-    print('🔍 DEBUG: Testing profile validation on init...');
-    validateUserProfile();
-    ever(subTotal, (_) {
-      if (subTotal.value > 599 &&
-          selectedPaymentMethod.value == PaymentGateway.cod.name) {
-        selectedPaymentMethod.value = PaymentGateway.razorpay.name;
-      }
-    });
-    //  super.onInit();
   }
 
   /// 🔑 BULLETPROOF PROFILE VALIDATION - NEVER FAILS
@@ -893,7 +1127,6 @@ class CartController extends GetxController
   /// 🔑 BULLETPROOF ORDER VALIDATION - NEVER FAILS
   Future<bool> validateAndPlaceOrderBulletproof() async {
     final startTime = DateTime.now();
-
     print('🚀 [BULLETPROOF_ORDER] ==========================================');
     print(
         '🚀 [BULLETPROOF_ORDER] ORDER VALIDATION STARTED at ${startTime.toIso8601String()}');
@@ -903,7 +1136,6 @@ class CartController extends GetxController
         '🚀 [BULLETPROOF_ORDER] Selected payment: ${selectedPaymentMethod.value}');
     print(
         '🚀 [BULLETPROOF_ORDER] Selected address: ${selectedAddress.value?.address ?? "NULL"}');
-
     // STEP 1: BULLETPROOF PROFILE VALIDATION
     print('🚀 [BULLETPROOF_ORDER] STEP 1: Starting profile validation...');
     final profileStartTime = DateTime.now();
@@ -1109,7 +1341,6 @@ class CartController extends GetxController
   void _updateCacheTime() {
     _lastCacheTime = DateTime.now();
   }
-
   // **ULTRA-FAST METHOD TO PRELOAD ALL CALCULATION DATA FOR INSTANT CART UPDATES**
   Future<void> _loadCalculationCache() async {
     if (_calculationCacheLoaded) return;
@@ -1522,18 +1753,108 @@ class CartController extends GetxController
       print('DEBUG: Stack trace: ${StackTrace.current}');
     }
   }
+  /// 🔑 CLEAR VENDOR CACHE WHEN CART CHANGES
+  void _clearVendorCache() {
+    _cachedVendorModel = null;
+    _lastCacheTime = null;
+    vendorModel.value = VendorModel(); // Reset to empty
+    print('🔑 VENDOR CACHE CLEARED - Ready for fresh vendor data');
+  }
+  /// 🔑 LOAD FRESH VENDOR DATA - NO CACHING
+  Future<void> _loadFreshVendorForCart() async {
+    try {
+      print('🛒 [FRESH_VENDOR_LOAD] Starting fresh vendor load...');
 
+      final martItems = cartItem.where((item) => _isMartItem(item)).toList();
+      final restaurantItems = cartItem.where((item) => !_isMartItem(item)).toList();
+
+      if (martItems.isNotEmpty) {
+        await _loadFreshMartVendor(martItems);
+      } else if (restaurantItems.isNotEmpty) {
+        await _loadFreshRestaurantVendor(restaurantItems.first.vendorID);
+      } else {
+        print('🛒 [FRESH_VENDOR_LOAD] No items found for vendor loading');
+      }
+    } catch (e) {
+      print('🛒 [FRESH_VENDOR_LOAD] Error loading fresh vendor: $e');
+    }
+  }
+
+  /// 🔑 LOAD FRESH MART VENDOR
+  Future<void> _loadFreshMartVendor(List<CartProductModel> martItems) async {
+    try {
+      final firstMartItem = martItems.first;
+      final vendorId = firstMartItem.vendorID;
+
+      print('🛒 [FRESH_MART_VENDOR] Loading mart vendor: $vendorId');
+
+      MartVendorModel? martVendor;
+      if (vendorId != null && vendorId.isNotEmpty) {
+        martVendor = await MartVendorService.getMartVendorById(vendorId);
+        if (martVendor == null) {
+          martVendor = await MartVendorService.getDefaultMartVendor();
+        }
+      } else {
+        martVendor = await MartVendorService.getDefaultMartVendor();
+      }
+
+      if (martVendor != null) {
+        vendorModel.value = VendorModel(
+          id: martVendor.id,
+          title: martVendor.title,
+          latitude: martVendor.latitude,
+          longitude: martVendor.longitude,
+          isSelfDelivery: false,
+          vType: martVendor.vType,
+          zoneId: martVendor.zoneId,
+          isOpen: martVendor.isOpen,
+        );
+        print('🛒 [FRESH_MART_VENDOR] Loaded: ${martVendor.title}');
+      }
+    } catch (e) {
+      print('🛒 [FRESH_MART_VENDOR] Error: $e');
+    }
+  }
+
+  /// 🔑 LOAD FRESH RESTAURANT VENDOR
+  Future<void> _loadFreshRestaurantVendor(String? vendorId) async {
+    try {
+      if (vendorId == null) {
+        print('🛒 [FRESH_RESTAURANT_VENDOR] No vendor ID provided');
+        return;
+      }
+
+      print('🛒 [FRESH_RESTAURANT_VENDOR] Loading restaurant vendor: $vendorId');
+
+      final freshVendor = await FireStoreUtils.getVendorById(vendorId);
+      if (freshVendor != null) {
+        vendorModel.value = freshVendor;
+        print('🛒 [FRESH_RESTAURANT_VENDOR] Loaded: ${freshVendor.title}');
+      } else {
+        print('🛒 [FRESH_RESTAURANT_VENDOR] Vendor not found: $vendorId');
+      }
+    } catch (e) {
+      print('🛒 [FRESH_RESTAURANT_VENDOR] Error: $e');
+    }
+  }
   getCartData() async {
-    print('DEBUG: CartController getCartData() called');
     cartProvider.cartStream.listen(
       (event) async {
-        print(
-            'DEBUG: CartController - Cart stream event received with ${event.length} items');
-        print(
-            'DEBUG: Cart items: ${event.map((e) => '${e.name} x${e.quantity}').join(', ')}');
-
         cartItem.clear();
         cartItem.addAll(event);
+        // 🔑 CRITICAL: Clear vendor cache when cart changes significantly
+        if (cartItem.isNotEmpty) {
+          final firstItemVendor = cartItem.first.vendorID;
+          if (_cachedVendorModel?.id != firstItemVendor) {
+            print('🛒 [VENDOR_DEBUG] Vendor changed, clearing cache');
+            _clearVendorCache();
+          }
+        }
+
+        if (cartItem.isNotEmpty) {
+          // Force fresh vendor load - NEVER use cache here
+          await _loadFreshVendorForCart();
+        }
 
         if (cartItem.isNotEmpty) {
           // Check if cart contains mart items
@@ -1541,16 +1862,12 @@ class CartController extends GetxController
               cartItem.where((item) => _isMartItem(item)).toList();
 
           if (martItems.isNotEmpty) {
-            // For mart items, get the mart vendor
-            print(
-                '[VENDOR_LOAD] 🏪 Cart contains mart items, loading mart vendor...');
+
             try {
               // Get the vendorID from the first mart item to load the specific mart vendor
               final firstMartItem = martItems.first;
               final vendorId = firstMartItem.vendorID;
 
-              print(
-                  '[VENDOR_LOAD] 🔍 Loading mart vendor for vendorID: $vendorId');
 
               MartVendorModel? martVendor;
 
@@ -1590,14 +1907,8 @@ class CartController extends GetxController
                 );
                 _cachedVendorModel = vendorModel.value;
                 _updateCacheTime();
-                print(
-                    '[VENDOR_LOAD] ✅ Mart vendor loaded: ${martVendor.title} (${martVendor.id})');
-                print(
-                    '[VENDOR_LOAD]   - Location: (${martVendor.latitude}, ${martVendor.longitude})');
-                print(
-                    '[VENDOR_LOAD]   - Is Self Delivery: false (mart vendors use regular delivery)');
+
               } else {
-                print('[VENDOR_LOAD] ❌ No mart vendor found in database');
                 // Don't set hardcoded values - let the system handle this gracefully
                 vendorModel.value = VendorModel();
               }
@@ -2173,14 +2484,28 @@ class CartController extends GetxController
         if (_cachedTaxList != null) {
           Constant.taxList = _cachedTaxList;
         } else if (Constant.taxList == null || Constant.taxList!.isEmpty) {
-          Constant.taxList = await FireStoreUtils.getTaxList();
-          _cachedTaxList = Constant.taxList;
+          try {
+            Constant.taxList = await FireStoreUtils.getTaxList();
+            _cachedTaxList = Constant.taxList;
+            print('DEBUG: Tax list loaded from Firebase');
+          } catch (e) {
+            print('DEBUG: Error loading tax list: $e');
+            // Try one more time if first attempt fails
+            try {
+              Constant.taxList = await FireStoreUtils.getTaxList();
+              _cachedTaxList = Constant.taxList;
+              print('DEBUG: Tax list loaded on retry');
+            } catch (retryError) {
+              print('DEBUG: Tax list loading failed on retry: $retryError');
+            }
+          }
         }
         print(
             'DEBUG: Using cached tax list with ${Constant.taxList?.length ?? 0} items');
 
         // Reset all values
         deliveryCharges.value = 0.0;
+        originalDeliveryFee.value = 0.0;
         subTotal.value = 0.0;
         couponAmount.value = 0.0;
         specialDiscountAmount.value = 0.0;
@@ -2546,11 +2871,16 @@ class CartController extends GetxController
             .any((item) => item.promoId != null && item.promoId!.isNotEmpty);
         final hasMartItems = hasMartItemsInCart();
 
-        if (Constant.taxList != null) {
+        // Calculate taxes - with retry and fallback logic
+        bool sgstCalculated = false;
+        bool gstCalculated = false;
+        
+        if (Constant.taxList != null && Constant.taxList!.isNotEmpty) {
           for (var element in Constant.taxList!) {
             if ((element.title?.toLowerCase() ?? '').contains('sgst')) {
               sgst = Constant.calculateTax(
                   amount: subTotal.value.toString(), taxModel: element);
+              sgstCalculated = true;
               if (hasPromotionalItemsForTax) {
                 print('[PROMOTIONAL_TAX] SGST (5%) on item total: ' +
                     sgst.toString());
@@ -2560,9 +2890,14 @@ class CartController extends GetxController
                 print('DEBUG: SGST (5%) on item total: ' + sgst.toString());
               }
             } else if ((element.title?.toLowerCase() ?? '').contains('gst')) {
+              // Calculate GST on delivery fee (use originalDeliveryFee for tax calculation)
+              final deliveryFeeForTax = originalDeliveryFee.value > 0 
+                  ? originalDeliveryFee.value 
+                  : deliveryCharges.value;
               gst = Constant.calculateTax(
-                  amount: originalDeliveryFee.value.toString(),
+                  amount: deliveryFeeForTax.toString(),
                   taxModel: element);
+              gstCalculated = true;
               if (hasPromotionalItemsForTax) {
                 print('[PROMOTIONAL_TAX] GST (18%) on delivery fee: ' +
                     gst.toString());
@@ -2575,7 +2910,42 @@ class CartController extends GetxController
             }
           }
         }
+        
+        // Fallback: If SGST not calculated, use default rate
+        if (!sgstCalculated && subTotal.value > 0) {
+          print('⚠️ WARNING: SGST not calculated, using fallback (5%)');
+          sgst = (subTotal.value * 5) / 100;
+          print('DEBUG: Fallback SGST (5%) on item total: ' + sgst.toString());
+        }
+        
+        // Fallback: If GST not calculated and delivery fee exists, use default rate
+        if (!gstCalculated) {
+          final deliveryFeeForTax = originalDeliveryFee.value > 0 
+              ? originalDeliveryFee.value 
+              : deliveryCharges.value;
+          if (deliveryFeeForTax > 0) {
+            print('⚠️ WARNING: GST not calculated, using fallback (18%)');
+            gst = (deliveryFeeForTax * 18) / 100;
+            print('DEBUG: Fallback GST (18%) on delivery fee: ' + gst.toString());
+          }
+        }
+        
         taxAmount.value = sgst + gst;
+
+        // Final validation: Ensure taxes are calculated when they should be
+        if (subTotal.value > 0 && taxAmount.value == 0.0) {
+          print('⚠️ WARNING: Taxes are 0 but subtotal > 0. Force recalculating with fallback...');
+          // Force recalculation with fallback
+          sgst = (subTotal.value * 5) / 100;
+          final deliveryFeeForTax = originalDeliveryFee.value > 0 
+              ? originalDeliveryFee.value 
+              : deliveryCharges.value;
+          if (deliveryFeeForTax > 0) {
+            gst = (deliveryFeeForTax * 18) / 100;
+          }
+          taxAmount.value = sgst + gst;
+          print('DEBUG: Force recalculated taxes - SGST: $sgst, GST: $gst, Total: ${taxAmount.value}');
+        }
 
         if (hasPromotionalItemsForTax) {
           print('[PROMOTIONAL_TAX] Total Taxes & Charges = ' +
@@ -2585,6 +2955,11 @@ class CartController extends GetxController
               taxAmount.value.toString());
         } else {
           print('DEBUG: Total Taxes & Charges = ' + taxAmount.value.toString());
+        }
+        
+        // Final validation log
+        if (subTotal.value > 0) {
+          print('DEBUG: Tax validation - Subtotal: ₹${subTotal.value}, Taxes: ₹${taxAmount.value}, Tax %: ${((taxAmount.value / subTotal.value) * 100).toStringAsFixed(2)}%');
         }
 
         bool isFreeDelivery = false;
@@ -3264,12 +3639,9 @@ class CartController extends GetxController
     final baseCharge = dc.baseDeliveryCharge ?? 23;
     final freeKm = dc.freeDeliveryDistanceKm ?? 7;
     final perKm = dc.perKmChargeAboveFreeDistance ?? 8;
-
     // Regular delivery has complex logic that doesn't fit the simple reusable method
     // So we'll keep the original logic but use the reusable method where possible
-
     print('DEBUG: Calculating regular delivery charge');
-
     if (vendorModel.value.isSelfDelivery == true &&
         Constant.isSelfDeliveryFeature == true) {
       deliveryCharges.value = 0.0;
@@ -3360,7 +3732,6 @@ class CartController extends GetxController
           return false;
         }
       }
-
       final success = await cartProvider.addToCart(
           Get.context!, cartProductModel, quantity);
       if (!success) {
@@ -3396,9 +3767,10 @@ class CartController extends GetxController
   }
 
   /// Enhanced place order with idempotency and state management
+  ///
+  /// finder
   placeOrder() async {
     print('DEBUG: Starting placeOrder process');
-
     // Check idempotency - prevent duplicate orders
     if (_isOrderInProgress()) {
       print('DEBUG: Order already in progress, ignoring duplicate request');
@@ -3406,7 +3778,6 @@ class CartController extends GetxController
           "Order is already being processed. Please wait...".tr);
       return;
     }
-
     // Check debouncing
     if (lastOrderAttempt != null &&
         DateTime.now().difference(lastOrderAttempt!) < orderDebounceTime) {
@@ -3819,11 +4190,13 @@ class CartController extends GetxController
       print('DEBUG: Error in rollback: $e');
     }
   }
-
+/// finderone
   setOrder() async {
     print('DEBUG: Starting order placement process');
 
     // Validate restaurant status before placing order (for wallet payments)
+    await FireStoreUtils.getVendorById(vendorModel.value.id!);
+    print("${vendorModel.value.author.toString()}  ${vendorModel.value.authorName.toString()}  ${vendorModel.value.categoryTitle.toString()}  vendorModel.value.author ");
     if (vendorModel.value.id != null) {
       final latestVendor =
           await FireStoreUtils.getVendorById(vendorModel.value.id!);
@@ -3860,10 +4233,11 @@ class CartController extends GetxController
   }
 
   // Internal method for order placement without restaurant status validation
+
+  ///issue finded
   Future<void> _setOrderInternal() async {
     String? orderId;
     List<CartProductModel> orderedProducts = [];
-
     try {
       // Check subscription limits if applicable
       if ((Constant.isSubscriptionModelApplied == true ||
@@ -3882,7 +4256,6 @@ class CartController extends GetxController
           return;
         }
       }
-
       // Prepare cart products
       for (CartProductModel cartProduct in cartItem) {
         CartProductModel tempCart = cartProduct;
@@ -4084,7 +4457,7 @@ class CartController extends GetxController
           .doc(orderModel.id)
           .set(orderModel.toJson());
 
-      print('DEBUG: Order stored successfully, processing additional tasks...');
+      log('DEBUG: Order stored successfully, processing additional tasks... ${orderModel.toJson()}');
 
       // Process additional tasks in parallel
       final additionalTasks = <Future>[];

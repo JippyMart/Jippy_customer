@@ -1,10 +1,6 @@
 import 'package:customer/controllers/restaurant_details_controller.dart';
-import 'package:customer/models/cart_product_model.dart';
 import 'package:customer/models/coupon_model.dart';
-import 'package:customer/models/favourite_item_model.dart';
-import 'package:customer/models/product_model.dart';
 import 'package:customer/themes/app_them_data.dart';
-import 'package:customer/themes/round_button_fill.dart';
 import 'package:customer/utils/dark_theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,8 +11,6 @@ import 'package:provider/provider.dart';
 import '../../../constant/constant.dart';
 import '../../../constant/show_toast_dialog.dart';
 import '../../../themes/responsive.dart';
-import '../../../utils/fire_store_utils.dart';
-import '../../../utils/network_image_widget.dart';
 
 class CouponListView extends StatelessWidget {
   final RestaurantDetailsController controller;

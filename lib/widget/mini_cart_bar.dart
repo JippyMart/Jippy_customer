@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:customer/app/cart_check_out_page/cart_check_out_screen.dart';
 // import 'package:url_launcher/url_launcher.dart';
 import '../app/cart_screen/cart_screen.dart';
 import '../app/restaurant_details_screen/restaurant_details_screen.dart';
@@ -142,7 +143,8 @@ class MiniCartBar extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () async {
                       await Future.delayed(const Duration(milliseconds: 100));
-                      Get.to(const CartScreen());
+                      // Get.to(const CartScreen());
+                      Get.to(const CartCheckOutScreen());
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFFff5201),

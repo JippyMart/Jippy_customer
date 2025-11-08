@@ -630,7 +630,6 @@ class ProductListView extends StatelessWidget {
                                           (product) =>
                                               product.id ==
                                               "${productModel.id}~${productModel.itemAttribute!.variants!.where((element) => element.variantSku == controller.selectedVariants.join('-')).isNotEmpty ? productModel.itemAttribute!.variants!.where((element) => element.variantSku == controller.selectedVariants.join('-')).first.variantId.toString() : ""}");
-
                                       if (productIsInList) {
                                         CartProductModel element =
                                             cartItem.firstWhere((product) =>
@@ -669,6 +668,7 @@ class ProductListView extends StatelessWidget {
                                     controller.calculatePrice(productModel);
                                     productDetailsBottomSheet(
                                         context, productModel);
+
                                   },
                                 )
                               : Obx(
@@ -929,7 +929,6 @@ class ProductListView extends StatelessWidget {
                                                         productModel.price
                                                             .toString()); // original price for strikethrough
                                               }
-
                                               controller.addToCart(
                                                   productModel: productModel,
                                                   price: finalPrice,
